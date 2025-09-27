@@ -1,116 +1,151 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, X, BookOpen, Video, Newspaper, Radar, GraduationCap, Brain } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, BookOpen, Video, Newspaper, Radar, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigation } from '@/context/NavigationContext';
 import { useAppFunctions } from '@/hooks/useAppFunctions';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CarouselItem {
   id: string;
   title: string;
   description: string;
   image: string;
-  category: 'curso' | 'livro' | 'blog' | 'noticia' | 'radar';
   function: string;
-  size: 'large' | 'medium' | 'small';
+  icon: any;
+  type: 'curso' | 'livro' | 'funcionalidade';
 }
-
-const carouselItems: CarouselItem[] = [
-  {
-    id: 'cursos-1',
-    title: 'Cursos Preparatórios',
-    description: 'Videoaulas completas para concursos e OAB',
-    image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&h=400&fit=crop&crop=center',
-    category: 'curso',
-    function: 'Cursos Preparatórios',
-    size: 'large'
-  },
-  {
-    id: 'biblioteca-1',
-    title: 'Biblioteca Jurídica',
-    description: 'Milhares de livros e doutrinas organizadas',
-    image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&h=400&fit=crop&crop=center',
-    category: 'livro',
-    function: 'Biblioteca Clássicos',
-    size: 'large'
-  },
-  {
-    id: 'videoaulas-1',
-    title: 'Videoaulas Especializadas',
-    description: 'Aulas com professores renomados',
-    image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=300&fit=crop&crop=center',
-    category: 'curso',
-    function: 'Videoaulas',
-    size: 'medium'
-  },
-  {
-    id: 'blog-1',
-    title: 'Blog Jurídico',
-    description: 'Artigos e análises atualizadas',
-    image: 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&h=300&fit=crop&crop=center',
-    category: 'blog',
-    function: 'Blog Jurídico',
-    size: 'medium'
-  },
-  {
-    id: 'noticias-1',
-    title: 'Notícias Comentadas',
-    description: 'Últimas novidades do mundo jurídico',
-    image: 'https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?w=500&h=250&fit=crop&crop=center',
-    category: 'noticia',
-    function: 'Notícias Comentadas',
-    size: 'small'
-  },
-  {
-    id: 'radar-1',
-    title: 'Radar Jurídico',
-    description: 'Monitore tendências e mudanças',
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500&h=250&fit=crop&crop=center',
-    category: 'radar',
-    function: 'Radar Jurídico',
-    size: 'small'
-  },
-  {
-    id: 'biblioteca-2',
-    title: 'Fora da Toga',
-    description: 'Desenvolvimento pessoal para juristas',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=300&fit=crop&crop=center',
-    category: 'livro',
-    function: 'Fora da Toga',
-    size: 'medium'
-  },
-  {
-    id: 'mapas-1',
-    title: 'Mapas Mentais',
-    description: 'Visualize conexões entre institutos jurídicos',
-    image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=600&h=300&fit=crop&crop=center',
-    category: 'curso',
-    function: 'Mapas Mentais',
-    size: 'medium'
-  }
-];
 
 export const ExplorarCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [items, setItems] = useState<CarouselItem[]>([]);
   const { setCurrentFunction, setIsExplorarOpen } = useNavigation();
 
+  // Carregar dados reais do Supabase
   useEffect(() => {
-    if (!isAutoPlaying) return;
+    const loadCarouselData = async () => {
+      try {
+        // Buscar cursos
+        const { data: cursos } = await supabase
+          .from('CURSOS-APP-VIDEO')
+          .select('*')
+          .limit(3);
+
+        // Buscar livros da biblioteca
+        const { data: livros } = await supabase
+          .from('BIBLIOTECA-JURIDICA')
+          .select('*')
+          .limit(4);
+
+        // Buscar capas de funções
+        const { data: capasFuncoes } = await supabase
+          .from('CAPAS-FUNÇÃO')
+          .select('*');
+
+        const carouselData: CarouselItem[] = [];
+
+        // Adicionar cursos
+        if (cursos) {
+          cursos.forEach(curso => {
+            if (curso.capa) {
+              carouselData.push({
+                id: `curso-${curso.id}`,
+                title: curso.Tema || 'Curso Preparatório',
+                description: curso.Assunto || 'Videoaulas especializadas',
+                image: curso.capa,
+                function: 'Cursos Preparatórios',
+                icon: GraduationCap,
+                type: 'curso'
+              });
+            }
+          });
+        }
+
+        // Adicionar livros
+        if (livros) {
+          livros.forEach(livro => {
+            if (livro.imagem) {
+              carouselData.push({
+                id: `livro-${livro.id}`,
+                title: livro.livro || 'Biblioteca Jurídica',
+                description: livro.sobre || 'Acervo completo de livros jurídicos',
+                image: livro.imagem,
+                function: 'Biblioteca Clássicos',
+                icon: BookOpen,
+                type: 'livro'
+              });
+            }
+          });
+        }
+
+        // Adicionar funcionalidades com capas
+        const funcionalidades = [
+          {
+            id: 'blog',
+            title: 'Blog Jurídico',
+            description: 'Artigos e análises especializadas',
+            function: 'Blog Jurídico',
+            icon: Newspaper
+          },
+          {
+            id: 'radar',
+            title: 'Radar Jurídico',
+            description: 'Monitore tendências e mudanças',
+            function: 'Radar Jurídico',
+            icon: Radar
+          },
+          {
+            id: 'videoaulas',
+            title: 'Videoaulas',
+            description: 'Aulas com professores especializados',
+            function: 'Videoaulas',
+            icon: Video
+          }
+        ];
+
+        funcionalidades.forEach(func => {
+          const capa = capasFuncoes?.find(c => 
+            c['Função']?.toLowerCase().includes(func.title.toLowerCase())
+          );
+          
+          carouselData.push({
+            id: func.id,
+            title: func.title,
+            description: func.description,
+            image: capa?.capa || 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=400&h=300&fit=crop',
+            function: func.function,
+            icon: func.icon,
+            type: 'funcionalidade'
+          });
+        });
+
+        setItems(carouselData);
+      } catch (error) {
+        console.error('Erro ao carregar dados do carrossel:', error);
+      }
+    };
+
+    loadCarouselData();
+  }, []);
+
+  // Auto-play
+  useEffect(() => {
+    if (!isAutoPlaying || items.length === 0) return;
     
     const interval = setInterval(() => {
-      setCurrentIndex(prev => (prev + 1) % carouselItems.length);
-    }, 4000);
+      setCurrentIndex(prev => (prev + 1) % items.length);
+    }, 3000);
     
     return () => clearInterval(interval);
-  }, [isAutoPlaying]);
+  }, [isAutoPlaying, items.length]);
 
   const handlePrevious = useCallback(() => {
-    setCurrentIndex(prev => (prev - 1 + carouselItems.length) % carouselItems.length);
-  }, []);
+    setCurrentIndex(prev => (prev - 1 + items.length) % items.length);
+  }, [items.length]);
 
   const handleNext = useCallback(() => {
-    setCurrentIndex(prev => (prev + 1) % carouselItems.length);
-  }, []);
+    setCurrentIndex(prev => (prev + 1) % items.length);
+  }, [items.length]);
 
   const handleItemClick = useCallback((item: CarouselItem) => {
     setCurrentFunction(item.function);
@@ -121,165 +156,113 @@ export const ExplorarCarousel = () => {
     setIsExplorarOpen(false);
   }, [setIsExplorarOpen]);
 
-  const getCategoryIcon = (category: CarouselItem['category']) => {
-    switch (category) {
-      case 'curso': return GraduationCap;
-      case 'livro': return BookOpen;
-      case 'blog': return Newspaper;
-      case 'noticia': return Newspaper;
-      case 'radar': return Radar;
-      default: return Brain;
-    }
-  };
+  if (items.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-background-deep/95 backdrop-blur-md z-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
-  const getCategoryColor = (category: CarouselItem['category']) => {
-    switch (category) {
-      case 'curso': return 'from-blue-500 to-blue-700';
-      case 'livro': return 'from-green-500 to-green-700';
-      case 'blog': return 'from-purple-500 to-purple-700';
-      case 'noticia': return 'from-orange-500 to-orange-700';
-      case 'radar': return 'from-red-500 to-red-700';
-      default: return 'from-gray-500 to-gray-700';
-    }
-  };
-
-  const getItemSize = (size: CarouselItem['size']) => {
-    switch (size) {
-      case 'large': return 'h-80 col-span-2';
-      case 'medium': return 'h-60 col-span-1';
-      case 'small': return 'h-40 col-span-1';
-      default: return 'h-60 col-span-1';
-    }
-  };
+  const currentItem = items[currentIndex];
+  const Icon = currentItem.icon;
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-background-deep via-background to-background-light z-50 overflow-hidden">
-      {/* Header com botão de fechar */}
-      <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-background-deep/95 to-transparent p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-r from-primary/20 to-accent-legal/20">
-              <Brain className="w-8 h-8 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Explorar Funcionalidades</h1>
-              <p className="text-muted-foreground">Descubra todas as ferramentas disponíveis</p>
-            </div>
+    <div className="fixed inset-0 bg-background-deep/95 backdrop-blur-md z-50 flex flex-col">
+      {/* Header minimalista */}
+      <div className="flex items-center justify-between p-4 border-b border-border/20">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <BookOpen className="w-5 h-5 text-primary" />
           </div>
-          <Button 
-            onClick={handleClose}
-            variant="outline" 
-            size="lg"
-            className="rounded-full"
-          >
-            <X className="w-6 h-6" />
-          </Button>
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">Explorar Funcionalidades</h1>
+            <p className="text-sm text-muted-foreground">Descubra todas as ferramentas disponíveis</p>
+          </div>
         </div>
+        <Button 
+          onClick={handleClose}
+          variant="ghost" 
+          size="sm"
+          className="rounded-full"
+        >
+          <X className="w-5 h-5" />
+        </Button>
       </div>
 
-      {/* Carousel principal */}
-      <div className="pt-32 pb-20 px-8 h-full overflow-y-auto">
-        <div 
-          className="relative"
-          onMouseEnter={() => setIsAutoPlaying(false)}
-          onMouseLeave={() => setIsAutoPlaying(true)}
-        >
-          {/* Grid do carousel */}
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-            {carouselItems.map((item, index) => {
-              const Icon = getCategoryIcon(item.category);
-              const isVisible = Math.abs(index - currentIndex) <= 2 || 
-                               Math.abs(index - currentIndex) >= carouselItems.length - 2;
-              
-              return (
-                <div
-                  key={item.id}
-                  className={`
-                    ${getItemSize(item.size)} ${isVisible ? 'opacity-100' : 'opacity-60'}
-                    relative overflow-hidden rounded-2xl cursor-pointer
-                    transition-all duration-500 transform hover:scale-105
-                    shadow-elegant hover:shadow-interactive
-                    ${index === currentIndex ? 'ring-2 ring-primary/50 scale-105' : ''}
-                  `}
-                  onClick={() => handleItemClick(item)}
-                  style={{
-                    animationDelay: `${index * 100}ms`
-                  }}
-                >
-                  {/* Background image */}
-                  <div 
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{
-                      backgroundImage: `url(${item.image})`,
-                      filter: 'brightness(0.4) contrast(1.1)'
-                    }}
-                  />
-                  
-                  {/* Gradient overlay */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${getCategoryColor(item.category)}/90`} />
-                  
-                  {/* Content */}
-                  <div className="absolute inset-0 p-6 flex flex-col justify-between text-white">
-                    <div className="flex items-start justify-between">
-                      <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm">
-                        <Icon className="w-6 h-6" />
-                      </div>
-                      {index === currentIndex && (
-                        <div className="animate-pulse">
-                          <div className="w-3 h-3 bg-primary rounded-full" />
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-xl font-bold mb-2 drop-shadow-lg">
-                        {item.title}
-                      </h3>
-                      <p className="text-sm text-white/90 drop-shadow-md line-clamp-2">
-                        {item.description}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {/* Hover effect */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
+      {/* Carrossel compacto */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm mx-auto relative">
+          {/* Card principal */}
+          <div 
+            onClick={() => handleItemClick(currentItem)}
+            className="relative w-full h-80 rounded-2xl overflow-hidden cursor-pointer group shadow-xl hover:shadow-2xl transition-all duration-300"
+            onMouseEnter={() => setIsAutoPlaying(false)}
+            onMouseLeave={() => setIsAutoPlaying(true)}
+          >
+            {/* Background image */}
+            <div 
+              className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+              style={{
+                backgroundImage: `url(${currentItem.image})`,
+                filter: 'brightness(0.7) contrast(1.1)'
+              }}
+            />
+            
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            
+            {/* Content */}
+            <div className="absolute inset-0 p-6 flex flex-col justify-between text-white">
+              <div className="flex items-start justify-between">
+                <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm">
+                  <Icon className="w-6 h-6" />
                 </div>
-              );
-            })}
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-bold mb-2 drop-shadow-lg">
+                  {currentItem.title}
+                </h3>
+                <p className="text-sm text-white/90 drop-shadow-md line-clamp-2">
+                  {currentItem.description}
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Navigation arrows */}
           <Button
             onClick={handlePrevious}
             variant="outline"
-            size="lg"
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 rounded-full bg-background/20 backdrop-blur-sm border-white/20 text-white hover:bg-background/40"
+            size="sm"
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 rounded-full bg-background/90 backdrop-blur-sm border-border/50 text-foreground hover:bg-background w-10 h-10 p-0"
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft className="w-4 h-4" />
           </Button>
 
           <Button
             onClick={handleNext}
             variant="outline"
-            size="lg"
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 rounded-full bg-background/20 backdrop-blur-sm border-white/20 text-white hover:bg-background/40"
+            size="sm"
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 rounded-full bg-background/90 backdrop-blur-sm border-border/50 text-foreground hover:bg-background w-10 h-10 p-0"
           >
-            <ChevronRight className="w-6 h-6" />
+            <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      {/* Progress indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2">
-        {carouselItems.map((_, index) => (
+      {/* Progress dots */}
+      <div className="flex justify-center gap-2 pb-8">
+        {items.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
             className={`
-              w-3 h-3 rounded-full transition-all duration-300
+              w-2 h-2 rounded-full transition-all duration-300
               ${index === currentIndex 
                 ? 'bg-primary scale-125' 
-                : 'bg-white/30 hover:bg-white/50'
+                : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
               }
             `}
           />
@@ -287,15 +270,15 @@ export const ExplorarCarousel = () => {
       </div>
 
       {/* Auto-play indicator */}
-      <div className="absolute bottom-20 right-8">
+      <div className="absolute bottom-4 right-4">
         <div className={`
-          px-3 py-1 rounded-full text-xs font-medium
+          px-2 py-1 rounded-lg text-xs font-medium transition-colors
           ${isAutoPlaying 
             ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-            : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+            : 'bg-muted/20 text-muted-foreground border border-border/30'
           }
         `}>
-          {isAutoPlaying ? 'Auto-play ativo' : 'Auto-play pausado'}
+          {isAutoPlaying ? 'Auto-play ativo' : 'Pausado'}
         </div>
       </div>
     </div>
