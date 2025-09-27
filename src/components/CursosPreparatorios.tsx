@@ -1167,11 +1167,7 @@ export const CursosPreparatorios = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                     
                     {/* Botão de Play Centralizado */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Button onClick={() => setSelectedArea(area)} size="lg" className="bg-primary/90 hover:bg-primary text-primary-foreground rounded-full w-20 h-20 shadow-lg animate-pulse-glow">
-                        <Play className="h-8 w-8" />
-                      </Button>
-                    </div>
+                    
                     
                     {/* Informações da Área */}
                     <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
