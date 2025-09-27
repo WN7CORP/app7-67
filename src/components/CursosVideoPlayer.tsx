@@ -4,7 +4,7 @@ import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, SkipForward, Chevro
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LessonActionButtons } from '@/components/Cursos/LessonActionButtons';
-import { normalizeVideoUrl } from '@/utils/videoHelpers';
+import { normalizeVideoUrl, getVideoType } from '@/utils/videoHelpers';
 
 interface CursosVideoPlayerProps {
   videoUrl: string;
@@ -47,6 +47,9 @@ export const CursosVideoPlayer = ({
   const [showNextLessonAlert, setShowNextLessonAlert] = useState(false);
   const [nearEndTriggered, setNearEndTriggered] = useState(false);
   const [autoAdvanceCountdown, setAutoAdvanceCountdown] = useState(5);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Auto-advance countdown effect
   useEffect(() => {
@@ -104,12 +107,20 @@ export const CursosVideoPlayer = ({
       }
       setIsPlaying(false);
       video.muted = false;
+      setIsLoading(false);
     };
 
     const handleCanPlay = () => {
       if (initialTime > 0) {
         video.currentTime = initialTime;
       }
+      setIsLoading(false);
+    };
+
+    const handleError = () => {
+      setHasError(true);
+      setIsLoading(false);
+      setErrorMessage('Não foi possível reproduzir o vídeo');
     };
 
     video.addEventListener('timeupdate', handleTimeUpdate);
@@ -117,6 +128,7 @@ export const CursosVideoPlayer = ({
     video.addEventListener('ended', handleEnded);
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
     video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener('error', handleError);
 
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
@@ -124,6 +136,7 @@ export const CursosVideoPlayer = ({
       video.removeEventListener('ended', handleEnded);
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('error', handleError);
     };
   }, [initialTime, onProgress, onEnded, onNearEnd, nearEndTriggered, showNextLessonAlert]);
 
@@ -167,6 +180,9 @@ export const CursosVideoPlayer = ({
     setCurrentTime(0);
     setDuration(0);
     setIsPlaying(false);
+    setIsLoading(true);
+    setHasError(false);
+    setErrorMessage('');
   }, [videoUrl]);
 
   const togglePlay = async () => {
@@ -261,6 +277,22 @@ export const CursosVideoPlayer = ({
 
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
+  const handleRetryVideo = () => {
+    setHasError(false);
+    setIsLoading(true);
+    setErrorMessage('');
+    if (videoRef.current) {
+      videoRef.current.load();
+    }
+  };
+
+  const handleOpenInDropbox = () => {
+    window.open(normalizeVideoUrl(videoUrl), '_blank');
+  };
+
+  const videoType = getVideoType(videoUrl);
+  const shouldUseCrossOrigin = videoType !== 'dropbox' && videoType !== 'unknown';
+
   return (
     <div className="space-y-4">
       <div 
@@ -268,23 +300,56 @@ export const CursosVideoPlayer = ({
         onMouseEnter={() => setShowControls(true)}
         onMouseLeave={() => setShowControls(false)}
       >
-      {/* Video Element */}
+       {/* Video Element */}
       <video
         ref={videoRef}
         src={normalizeVideoUrl(videoUrl)}
         className="w-full h-auto bg-black"
         onClick={togglePlay}
         onLoadStart={() => {
-          setCurrentTime(0);
-          setIsPlaying(false);
+          setIsLoading(true);
         }}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         preload="metadata"
         playsInline
         controls={false}
-        crossOrigin="anonymous"
+        {...(shouldUseCrossOrigin && { crossOrigin: "anonymous" })}
       />
+
+      {/* Loading Indicator */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {hasError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+          <div className="text-center p-6">
+            <p className="text-white mb-4">{errorMessage}</p>
+            <div className="space-x-4">
+              <Button 
+                variant="outline" 
+                onClick={handleRetryVideo}
+                className="text-white border-white hover:bg-white hover:text-black"
+              >
+                Tentar novamente
+              </Button>
+              {videoType === 'dropbox' && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleOpenInDropbox}
+                  className="text-white border-white hover:bg-white hover:text-black"
+                >
+                  Abrir no Dropbox
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
 
       {/* Controls Overlay - Hidden when playing */}

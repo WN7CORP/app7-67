@@ -19,12 +19,17 @@ export const normalizeVideoUrl = (url: string): string => {
   
   // Converter links do Dropbox para formato de reprodução direta
   if (url.includes('dropbox.com')) {
-    // Garantir que termine com dl=1 para download direto
-    if (url.includes('dl=0')) {
-      return url.replace('dl=0', 'dl=1');
-    }
-    if (!url.includes('dl=1') && !url.includes('dl=0')) {
-      return url + (url.includes('?') ? '&' : '?') + 'dl=1';
+    try {
+      const urlObj = new URL(url);
+      // Remover dl=0 ou dl=1 existentes
+      urlObj.searchParams.delete('dl');
+      // Adicionar raw=1 para streaming direto
+      urlObj.searchParams.set('raw', '1');
+      return urlObj.toString();
+    } catch {
+      // Fallback se URL inválida
+      return url.replace(/[?&]dl=[01]/, '').replace(/[?&]raw=1/, '') + 
+             (url.includes('?') ? '&' : '?') + 'raw=1';
     }
   }
   
