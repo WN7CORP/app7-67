@@ -122,6 +122,9 @@ export const CursoArtigoPorArtigo = ({ onBack }: CursoArtigoPorArtigoProps) => {
 
   // Visualização de artigo individual
   if (selectedArtigo) {
+    // Verifica se é apenas um título/seção (sem texto de artigo completo)
+    const isOnlyTitle = !selectedArtigo.texto_artigo || selectedArtigo.texto_artigo.trim().length < 50;
+    
     return (
       <div className="min-h-screen bg-background">
         <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/30 h-14">
@@ -137,7 +140,7 @@ export const CursoArtigoPorArtigo = ({ onBack }: CursoArtigoPorArtigoProps) => {
             </Button>
             <div className="ml-4 flex-1">
               <Badge variant="outline" className="mr-2">
-                {selectedArtigo.area} - Art. {selectedArtigo.artigo}
+                {selectedArtigo.area} {!isOnlyTitle && `- Art. ${selectedArtigo.artigo}`}
               </Badge>
             </div>
           </div>
@@ -145,12 +148,14 @@ export const CursoArtigoPorArtigo = ({ onBack }: CursoArtigoPorArtigoProps) => {
 
         <div className="p-4 max-w-4xl mx-auto">
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold mb-2">Artigo {selectedArtigo.artigo}</h2>
+            <h2 className="text-2xl font-bold mb-2">
+              {isOnlyTitle ? selectedArtigo.artigo : `Artigo ${selectedArtigo.artigo}`}
+            </h2>
             <Badge variant="outline">{selectedArtigo.area}</Badge>
           </div>
 
-          {/* Vídeo */}
-          {selectedArtigo.link_artigo && (
+          {/* Vídeo - só mostra se não for apenas título */}
+          {!isOnlyTitle && selectedArtigo.link_artigo && (
             <div className="mb-6">
               <CursosVideoPlayer 
                 videoUrl={normalizeVideoUrl(selectedArtigo.link_artigo)} 
@@ -172,8 +177,8 @@ export const CursoArtigoPorArtigo = ({ onBack }: CursoArtigoPorArtigoProps) => {
             </div>
           )}
 
-          {/* Toggle entre Texto e Análise */}
-          {selectedArtigo.texto_artigo && selectedArtigo.analise && (
+          {/* Toggle entre Texto e Análise - só mostra se não for apenas título */}
+          {!isOnlyTitle && selectedArtigo.texto_artigo && selectedArtigo.analise && (
             <div className="flex items-center justify-center space-x-4 mb-6">
               <Label htmlFor="toggle-content" className={!showAnalise ? 'font-semibold' : ''}>
                 Texto do Artigo
@@ -192,7 +197,15 @@ export const CursoArtigoPorArtigo = ({ onBack }: CursoArtigoPorArtigoProps) => {
           {/* Conteúdo */}
           <Card className="mb-6">
             <CardContent className="p-6">
-              {showAnalise ? (
+              {isOnlyTitle ? (
+                <div className="text-center py-8">
+                  <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">{selectedArtigo.artigo}</h3>
+                  <p className="text-muted-foreground">
+                    Esta é uma seção do código. Navegue pelos artigos específicos para ver o conteúdo detalhado.
+                  </p>
+                </div>
+              ) : showAnalise ? (
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Análise do Artigo</h3>
                   <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-muted-foreground prose-p:leading-relaxed prose-strong:text-yellow-500 prose-strong:font-bold prose-li:text-muted-foreground prose-ul:space-y-2 prose-ol:space-y-2">
@@ -225,26 +238,34 @@ export const CursoArtigoPorArtigo = ({ onBack }: CursoArtigoPorArtigoProps) => {
             </CardContent>
           </Card>
 
-          <LessonActionButtons lesson={{
-            id: selectedArtigo.id,
-            area: selectedArtigo.area,
-            tema: `Artigo ${selectedArtigo.artigo}`,
-            assunto: selectedArtigo.texto_artigo,
-            conteudo: selectedArtigo.analise || ''
-          }} />
+          {/* Botões de ação - só mostra se não for apenas título */}
+          {!isOnlyTitle && (
+            <LessonActionButtons lesson={{
+              id: selectedArtigo.id,
+              area: selectedArtigo.area,
+              tema: `Artigo ${selectedArtigo.artigo}`,
+              assunto: selectedArtigo.texto_artigo,
+              conteudo: selectedArtigo.analise || ''
+            }} />
+          )}
         </div>
         
-        <ProfessoraIAFloatingButton onOpen={() => setShowProfessora(true)} />
-        
-        <ProfessoraIA 
-          video={{
-            title: `Art. ${selectedArtigo.artigo} - ${selectedArtigo.area}`,
-            area: selectedArtigo.area,
-            channelTitle: 'Artigo por Artigo'
-          }} 
-          isOpen={showProfessora} 
-          onClose={() => setShowProfessora(false)} 
-        />
+        {/* Professora IA - só mostra se não for apenas título */}
+        {!isOnlyTitle && (
+          <>
+            <ProfessoraIAFloatingButton onOpen={() => setShowProfessora(true)} />
+            
+            <ProfessoraIA 
+              video={{
+                title: `Art. ${selectedArtigo.artigo} - ${selectedArtigo.area}`,
+                area: selectedArtigo.area,
+                channelTitle: 'Artigo por Artigo'
+              }} 
+              isOpen={showProfessora} 
+              onClose={() => setShowProfessora(false)} 
+            />
+          </>
+        )}
       </div>
     );
   }
@@ -310,48 +331,63 @@ export const CursoArtigoPorArtigo = ({ onBack }: CursoArtigoPorArtigoProps) => {
 
           {/* Lista de Artigos */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredArtigos.map((artigo) => (
-              <div 
-                key={artigo.id} 
-                className="bg-card rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-all group border border-border/50"
-                onClick={() => setSelectedArtigo(artigo)}
-              >
-                <div className="relative h-40 overflow-hidden">
-                  {artigo.capa_artigo ? (
-                    <img 
-                      src={artigo.capa_artigo} 
-                      alt={`Art. ${artigo.artigo}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                      <FileText className="w-12 h-12 text-primary" />
+            {filteredArtigos.map((artigo) => {
+              // Verifica se é apenas um título/seção (sem texto de artigo completo)
+              const isOnlyTitle = !artigo.texto_artigo || artigo.texto_artigo.trim().length < 50;
+              
+              return (
+                <div 
+                  key={artigo.id} 
+                  className="bg-card rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-all group border border-border/50"
+                  onClick={() => setSelectedArtigo(artigo)}
+                >
+                  <div className="relative h-40 overflow-hidden">
+                    {artigo.capa_artigo ? (
+                      <img 
+                        src={artigo.capa_artigo} 
+                        alt={isOnlyTitle ? artigo.artigo : `Art. ${artigo.artigo}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                        <FileText className="w-12 h-12 text-primary" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                    
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <h3 className="text-white font-bold text-lg mb-1">
+                        {isOnlyTitle ? artigo.artigo : `Art. ${artigo.artigo}`}
+                      </h3>
                     </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                  </div>
                   
-                  <div className="absolute bottom-3 left-3 right-3">
-                    <h3 className="text-white font-bold text-lg mb-1">Art. {artigo.artigo}</h3>
+                  <div className="p-4">
+                    {artigo.texto_artigo && !isOnlyTitle && (
+                      <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
+                        {artigo.texto_artigo}
+                      </p>
+                    )}
+                    
+                    {!isOnlyTitle && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Play className="w-4 h-4 text-primary" />
+                          <span className="text-sm text-primary font-medium">Assistir</span>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    )}
+
+                    {isOnlyTitle && (
+                      <div className="flex items-center justify-end">
+                        <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    )}
                   </div>
                 </div>
-                
-                <div className="p-4">
-                  {artigo.texto_artigo && (
-                    <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
-                      {artigo.texto_artigo}
-                    </p>
-                  )}
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Play className="w-4 h-4 text-primary" />
-                      <span className="text-sm text-primary font-medium">Assistir</span>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
