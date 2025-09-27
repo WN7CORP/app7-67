@@ -1,0 +1,101 @@
+import { motion } from 'framer-motion';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { OptimizedImage } from './OptimizedImage';
+import { BookOpen } from 'lucide-react';
+
+interface LivroJuridico {
+  id: number;
+  imagem: string;
+  livro: string;
+  autor?: string;
+  area: string;
+  sobre?: string;
+  link?: string;
+  download?: string;
+  Profissões?: string;
+  'profissões-area'?: string;
+  'capa-profissao'?: string;
+}
+
+interface BibliotecaAreasOABProps {
+  livrosPorArea: Record<string, { livros: LivroJuridico[], profissao: string, capa: string | null }>;
+  areasOAB: string[];
+  onAreaClick: (area: string) => void;
+}
+
+export const BibliotecaAreasOAB = ({ 
+  livrosPorArea, 
+  areasOAB, 
+  onAreaClick 
+}: BibliotecaAreasOABProps) => {
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-2">Áreas do Exame da Ordem - OAB</h2>
+        <p className="text-muted-foreground">
+          Escolha a área para ver os livros específicos para o exame da OAB
+        </p>
+      </div>
+
+      <motion.div 
+        className="grid grid-cols-2 gap-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {areasOAB.map((area, index) => {
+          const areaData = livrosPorArea[area];
+          const totalLivros = areaData?.livros.length || 0;
+          
+          return (
+            <motion.div
+              key={area}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: index * 0.1 }}
+            >
+              <Card 
+                className="group cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 bg-card/50 backdrop-blur-sm border-border/50"
+                onClick={() => onAreaClick(area)}
+              >
+                <CardContent className="p-4">
+                  <div className="aspect-[3/4] mb-4 rounded-lg overflow-hidden bg-gradient-to-br from-primary/5 to-secondary/5 relative">
+                    {areaData?.capa ? (
+                      <OptimizedImage
+                        src={areaData.capa}
+                        alt={`Capa ${area}`}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <BookOpen className="h-16 w-16 text-muted-foreground/50" />
+                      </div>
+                    )}
+                    
+                    <div className="absolute top-2 right-2">
+                      <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm">
+                        {totalLivros} {totalLivros === 1 ? 'livro' : 'livros'}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                      {area}
+                    </h3>
+                    {areaData?.profissao && (
+                      <p className="text-xs text-muted-foreground line-clamp-1">
+                        {areaData.profissao}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })}
+      </motion.div>
+    </div>
+  );
+};
