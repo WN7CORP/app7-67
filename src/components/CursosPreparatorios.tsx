@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Search, Play, BookOpen, Clock, Users, ChevronRight, PlayCircle, TrendingUp, GraduationCap, UserPlus } from 'lucide-react';
+import { ArrowLeft, Search, Play, BookOpen, Clock, Users, ChevronRight, PlayCircle, TrendingUp, GraduationCap, UserPlus, FileText } from 'lucide-react';
 import { useNavigation } from '@/context/NavigationContext';
 import { useCursosOrganizados, useProgressoUsuario, CursoArea, CursoModulo, CursoAula } from '@/hooks/useCursosPreparatorios';
 import { useFaculdadeOrganizada, useProgressoFaculdade, SemestreFaculdade, ModuloFaculdade, TemaFaculdade, AulaFaculdadeCompleta } from '@/hooks/useCursoFaculdade';
@@ -13,7 +13,7 @@ import ReactMarkdown from 'react-markdown';
 import ProfessoraIA from './ProfessoraIA';
 import { ProfessoraIAFloatingButton } from './ProfessoraIAFloatingButton';
 import { LessonActionButtons } from './Cursos/LessonActionButtons';
-type CursoTipo = 'iniciando' | 'faculdade' | null;
+type CursoTipo = 'iniciando' | 'faculdade' | 'artigo' | null;
 export const CursosPreparatorios = () => {
   const {
     setCurrentFunction
@@ -241,6 +241,32 @@ export const CursosPreparatorios = () => {
                     <div className="flex items-center gap-1">
                       <Play className="w-4 h-4" />
                       <span>{totalAulasFaculdade} aulas</span>
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+
+            {/* Artigo por Artigo */}
+            <div onClick={() => setCurrentFunction('Artigo por Artigo')} className="bg-card rounded-xl p-6 cursor-pointer hover:bg-accent/50 transition-colors border border-border group">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-lg bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+                  <FileText className="w-8 h-8 text-accent-foreground" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold mb-2">Artigo por Artigo</h3>
+                  <p className="text-muted-foreground mb-3">
+                    Estude cada artigo do Código Civil com vídeos explicativos e análises detalhadas
+                  </p>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <BookOpen className="w-4 h-4" />
+                      <span>Código Civil</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Play className="w-4 h-4" />
+                      <span>Vídeos explicativos</span>
                     </div>
                   </div>
                 </div>
