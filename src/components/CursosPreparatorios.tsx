@@ -13,6 +13,9 @@ import ReactMarkdown from 'react-markdown';
 import ProfessoraIA from './ProfessoraIA';
 import { ProfessoraIAFloatingButton } from './ProfessoraIAFloatingButton';
 import { LessonActionButtons } from './Cursos/LessonActionButtons';
+import yellowArrow from '@/assets/yellow-arrow.png';
+import babyIcon from '@/assets/baby-icon.png';
+import graduationCapIcon from '@/assets/graduation-cap-icon.png';
 
 type CursoTipo = 'iniciando' | 'faculdade' | null;
 
@@ -227,7 +230,7 @@ export const CursosPreparatorios = () => {
             >
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <UserPlus className="w-8 h-8 text-primary" />
+                  <img src={babyIcon} alt="Bebê" className="w-8 h-8" />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-xl font-bold mb-2">Iniciando no Direito</h3>
@@ -245,7 +248,7 @@ export const CursosPreparatorios = () => {
                     </div>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                <img src={yellowArrow} alt="Seta" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
 
@@ -256,7 +259,7 @@ export const CursosPreparatorios = () => {
             >
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
-                  <GraduationCap className="w-8 h-8 text-secondary" />
+                  <img src={graduationCapIcon} alt="Chapéu de formatura" className="w-8 h-8" />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-xl font-bold mb-2">Faculdade</h3>
@@ -274,7 +277,7 @@ export const CursosPreparatorios = () => {
                     </div>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                <img src={yellowArrow} alt="Seta" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
           </div>
@@ -679,7 +682,7 @@ export const CursosPreparatorios = () => {
                           Concluída
                         </Badge>
                       )}
-                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                      <img src={yellowArrow} alt="Seta" className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
 
@@ -763,82 +766,63 @@ export const CursosPreparatorios = () => {
               const progressoModulo = calcularProgressoModulo(modulo.aulas);
               
               return (
-                <div
-                  key={`${modulo.nome}-${index}`}
-                  className="bg-card rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-all group border border-border/50"
-                >
-                  <div className="relative h-40 overflow-hidden">
-                    <img 
-                      src={modulo.capa || '/placeholder.svg'} 
-                      alt={modulo.nome}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="eager"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    
-                    {/* Botão Player Centralizado */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Button 
-                        onClick={() => setSelectedModulo(modulo)}
-                        size="lg"
-                        className="bg-primary/90 hover:bg-primary text-primary-foreground rounded-full w-16 h-16 shadow-lg"
-                      >
-                        <Play className="h-6 w-6" />
-                      </Button>
-                    </div>
-                    
-                    <div className="absolute bottom-2 left-2 right-2">
-                      <h3 className="font-semibold text-white text-sm line-clamp-2 mb-2">
-                        {modulo.nome}
-                      </h3>
-                      
-                      {/* Progresso visual */}
-                      <div className="w-full bg-white/20 rounded-full h-1">
-                        <div 
-                          className="bg-primary rounded-full h-1 transition-all duration-300" 
-                          style={{ width: `${progressoModulo}%` }}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="absolute top-2 right-2">
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedModulo(modulo);
-                        }}
-                        size="sm"
-                        className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-full p-2 border-none"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4" onClick={() => setSelectedModulo(modulo)}>
-                    <div className="space-y-3">
-                      <p className="text-xs text-muted-foreground line-clamp-2">
-                        Módulo completo com {modulo.aulas.length} aulas práticas sobre {modulo.nome.toLowerCase()}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 text-xs">
-                          <div className="flex items-center gap-1 bg-secondary/50 px-2 py-1 rounded-full">
-                            <PlayCircle className="w-3 h-3" />
-                            <span className="font-medium">{modulo.aulas.length}</span>
-                          </div>
-                          <div className="flex items-center gap-1 bg-secondary/50 px-2 py-1 rounded-full">
-                            <Clock className="w-3 h-3" />
-                            <span className="font-medium">{modulo.totalDuracao}min</span>
-                          </div>
-                          <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-full">
-                            <TrendingUp className="w-3 h-3 text-primary" />
-                            <span className="font-medium text-primary">{progressoModulo}%</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  <div
+                   key={`${modulo.nome}-${index}`}
+                   onClick={() => setSelectedModulo(modulo)}
+                   className="bg-card rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-all group border border-border/50"
+                 >
+                   <div className="relative h-40 overflow-hidden">
+                     <img 
+                       src={modulo.capa || '/placeholder.svg'} 
+                       alt={modulo.nome}
+                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                       loading="eager"
+                     />
+                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                     
+                     <div className="absolute bottom-2 left-2 right-2">
+                       <h3 className="font-bold text-white text-lg line-clamp-2 mb-2">
+                         {modulo.nome}
+                       </h3>
+                       
+                       {/* Progresso visual */}
+                       <div className="w-full bg-white/20 rounded-full h-1">
+                         <div 
+                           className="bg-primary rounded-full h-1 transition-all duration-300" 
+                           style={{ width: `${progressoModulo}%` }}
+                         />
+                       </div>
+                     </div>
+                     
+                     <div className="absolute top-2 right-2">
+                       <img src={yellowArrow} alt="Seta" className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                     </div>
+                   </div>
+                   
+                   <div className="p-4">
+                     <div className="space-y-3">
+                       <p className="text-xs text-muted-foreground line-clamp-2">
+                         Módulo completo com {modulo.aulas.length} aulas práticas sobre {modulo.nome.toLowerCase()}
+                       </p>
+                       <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-3 text-xs">
+                           <div className="flex items-center gap-1 bg-secondary/50 px-2 py-1 rounded-full">
+                             <PlayCircle className="w-3 h-3" />
+                             <span className="font-medium">{modulo.aulas.length}</span>
+                           </div>
+                           <div className="flex items-center gap-1 bg-secondary/50 px-2 py-1 rounded-full">
+                             <Clock className="w-3 h-3" />
+                             <span className="font-medium">{modulo.totalDuracao}min</span>
+                           </div>
+                           <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-full">
+                             <TrendingUp className="w-3 h-3 text-primary" />
+                             <span className="font-medium text-primary">{progressoModulo}%</span>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
               );
             })}
           </div>
@@ -964,7 +948,7 @@ export const CursosPreparatorios = () => {
                           Concluída
                         </Badge>
                       )}
-                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                      <img src={yellowArrow} alt="Seta" className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
 
@@ -1070,10 +1054,10 @@ export const CursosPreparatorios = () => {
                       </div>
                     </div>
                     
-                    {/* Título sobreposto */}
-                    <div className="absolute bottom-3 left-3 right-3">
-                      <h3 className="text-white font-bold text-sm mb-1 line-clamp-2">{tema.nome}</h3>
-                    </div>
+                     {/* Título sobreposto */}
+                     <div className="absolute bottom-3 left-3 right-3">
+                       <h3 className="text-white font-bold text-lg mb-1 line-clamp-2">{tema.nome}</h3>
+                     </div>
                   </div>
                   
                   <div className="p-4">
@@ -1099,7 +1083,7 @@ export const CursosPreparatorios = () => {
                       <span className="text-xs text-muted-foreground">
                         {progressoTema}% concluído
                       </span>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                       <img src={yellowArrow} alt="Seta" className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </div>
@@ -1197,10 +1181,10 @@ export const CursosPreparatorios = () => {
                       </div>
                     </div>
                     
-                    {/* Título sobreposto */}
-                    <div className="absolute bottom-3 left-3 right-3">
-                      <h3 className="text-white font-bold text-sm mb-1 line-clamp-2">{modulo.nome}</h3>
-                    </div>
+                     {/* Título sobreposto */}
+                     <div className="absolute bottom-3 left-3 right-3">
+                       <h3 className="text-white font-bold text-lg mb-1 line-clamp-2">{modulo.nome}</h3>
+                     </div>
                   </div>
                   
                   <div className="p-4">
@@ -1226,7 +1210,7 @@ export const CursosPreparatorios = () => {
                       <span className="text-xs text-muted-foreground">
                         {progressoModulo}% concluído
                       </span>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                      <img src={yellowArrow} alt="Seta" className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </div>
@@ -1332,7 +1316,7 @@ export const CursosPreparatorios = () => {
                       <span className="text-sm text-muted-foreground">
                         {progressoSemestre}% concluído
                       </span>
-                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                      <img src={yellowArrow} alt="Seta" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </div>
