@@ -323,11 +323,14 @@ export const VadeMecumUltraFast: React.FC = () => {
     const articleText = article.Artigo || '';
     const articleNumber = article["Número do Artigo"] || article.numero || '';
     
-    // Verificar se realmente há um número do artigo válido (não ID numérico simples)
+    // Verificar se realmente há um número do artigo válido (incluindo números maiores que 9)
     const hasArticleNumber = articleNumber && 
       articleNumber.toString().trim() !== '' && 
       articleNumber.toString().trim() !== 'NULL' &&
-      (articleNumber.toString().includes('Art') || articleNumber.toString().includes('°') || articleNumber.toString().includes('º'));
+      (articleNumber.toString().includes('Art') || 
+       articleNumber.toString().includes('°') || 
+       articleNumber.toString().includes('º') ||
+       /^\d+$/.test(articleNumber.toString().trim())); // Aceitar números puros também
 
     const callGeminiAPI = async (action: 'explicar' | 'exemplo' | 'apresentar') => {
       setLoadingState(action === 'apresentar' ? null : action);
@@ -347,13 +350,13 @@ export const VadeMecumUltraFast: React.FC = () => {
         if (error) throw error;
 
         if (action === 'explicar') {
-          const content = data.content || data.response || 'Explicação gerada com sucesso.';
+          const content = data.content || 'Explicação gerada com sucesso.';
           console.log('Definindo explicação:', content);
           setExplanation(content);
           setShowExplanation(true);
           console.log('Modal de explicação aberto:', true);
         } else if (action === 'exemplo') {
-          const content = data.content || data.response || 'Exemplo gerado com sucesso.';
+          const content = data.content || 'Exemplo gerado com sucesso.';
           console.log('Definindo exemplo:', content);
           setPracticalExample(content);
           setShowExample(true);
@@ -429,6 +432,27 @@ export const VadeMecumUltraFast: React.FC = () => {
       }
     };
 
+    // Layout diferenciado baseado no tipo de conteúdo
+    if (!hasArticleNumber) {
+      // Layout compacto para textos legais (títulos, seções, etc.)
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Card className="hover:shadow-sm transition-all duration-300 glass-effect-modern border-border/30 bg-muted/20">
+            <CardContent className="p-4 text-center">
+              <div className="text-sm font-medium text-foreground/80 leading-relaxed">
+                {articleText}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    // Layout completo para artigos com número
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -437,90 +461,78 @@ export const VadeMecumUltraFast: React.FC = () => {
       >
         <Card className="hover:shadow-md transition-all duration-300 glass-effect-modern border-border/50">
           <CardContent className="p-4">
-            {/* Mostrar número do artigo apenas se existir e não for NULL */}
-            {hasArticleNumber && (
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-primary" />
-                  <span className="font-semibold text-primary">
-                    {articleNumber}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsFavorited(!isFavorited)}
-                    className={`${isFavorited ? 'text-primary' : 'text-muted-foreground'} hover:text-primary transition-colors`}
-                  >
-                    <Bookmark className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onCopy}
-                    className="h-8 text-xs border-primary/20 hover:border-primary/40"
-                  >
-                    <Copy className="h-3 w-3 mr-1" />
-                    Copiar
-                  </Button>
-                </div>
+            {/* Cabeçalho com número do artigo */}
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <span className="font-semibold text-primary">
+                  {articleNumber}
+                </span>
               </div>
-            )}
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsFavorited(!isFavorited)}
+                  className={`${isFavorited ? 'text-primary' : 'text-muted-foreground'} hover:text-primary transition-colors`}
+                >
+                  <Bookmark className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onCopy}
+                  className="h-8 text-xs border-primary/20 hover:border-primary/40"
+                >
+                  <Copy className="h-3 w-3 mr-1" />
+                  Copiar
+                </Button>
+              </div>
+            </div>
 
-            {/* Quando não há número do artigo válido, não mostrar nenhum botão de copiar */}
-            
-            {/* Texto do artigo com fonte legível e formatação aprimorada */}
+            {/* Texto do artigo com fonte legível */}
             <div className="vademecum-text text-foreground mb-4 whitespace-pre-wrap">
               {articleText}
             </div>
 
-            {/* Action Buttons - Condicionais baseados na existência válida do número do artigo */}
+            {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 mb-4">
-              {/* Botões de Explicar e Exemplo APENAS para artigos com número válido */}
-              {hasArticleNumber && (
-                <>
-                  <Button
-                    onClick={() => callGeminiAPI('explicar')}
-                    disabled={loadingState !== null}
-                    className="bg-gradient-to-r from-primary to-accent-legal hover:from-primary/90 hover:to-accent-legal/90 text-primary-foreground border-none"
-                    size="sm"
-                  >
-                    {loadingState === 'explicar' ? (
-                      <div className="animate-spin h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full mr-2" />
-                    ) : (
-                      <BookOpen className="h-4 w-4 mr-2" />
-                    )}
-                    {loadingState === 'explicar' ? 'Gerando explicação...' : 'Explicar'}
-                  </Button>
-                  <Button
-                    onClick={() => callGeminiAPI('exemplo')}
-                    disabled={loadingState !== null}
-                    variant="outline"
-                    size="sm"
-                    className="border-primary/30 hover:border-primary/50 hover:bg-primary/10"
-                  >
-                    {loadingState === 'exemplo' ? (
-                      <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mr-2" />
-                    ) : (
-                      <Lightbulb className="h-4 w-4 mr-2" />
-                    )}
-                    {loadingState === 'exemplo' ? 'Gerando exemplo...' : 'Exemplo'}
-                  </Button>
-                </>
-              )}
-              {/* Botão de ouvir APENAS para artigos com número válido */}
-              {hasArticleNumber && (
-                <Button
-                  onClick={playAudio}
-                  variant="ghost"
-                  size="sm"
-                  className="hover:bg-muted/50"
-                >
-                  <Volume2 className="h-4 w-4 mr-2" />
-                  Ouvir
-                </Button>
-              )}
+              <Button
+                onClick={() => callGeminiAPI('explicar')}
+                disabled={loadingState !== null}
+                className="bg-gradient-to-r from-primary to-accent-legal hover:from-primary/90 hover:to-accent-legal/90 text-primary-foreground border-none"
+                size="sm"
+              >
+                {loadingState === 'explicar' ? (
+                  <div className="animate-spin h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full mr-2" />
+                ) : (
+                  <BookOpen className="h-4 w-4 mr-2" />
+                )}
+                {loadingState === 'explicar' ? 'Gerando explicação...' : 'Explicar'}
+              </Button>
+              <Button
+                onClick={() => callGeminiAPI('exemplo')}
+                disabled={loadingState !== null}
+                variant="outline"
+                size="sm"
+                className="border-primary/30 hover:border-primary/50 hover:bg-primary/10"
+              >
+                {loadingState === 'exemplo' ? (
+                  <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mr-2" />
+                ) : (
+                  <Lightbulb className="h-4 w-4 mr-2" />
+                )}
+                {loadingState === 'exemplo' ? 'Gerando exemplo...' : 'Exemplo'}
+              </Button>
+              <Button
+                onClick={playAudio}
+                variant="ghost"
+                size="sm"
+                className="hover:bg-muted/50"
+              >
+                <Volume2 className="h-4 w-4 mr-2" />
+                Ouvir
+              </Button>
             </div>
 
             {/* Explanation Content - APENAS para artigos com número válido */}
