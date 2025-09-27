@@ -14,6 +14,7 @@ import { useNavigation } from '@/context/NavigationContext';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { ProfessoraIAFloatingButton } from '@/components/ProfessoraIAFloatingButton';
+import { ProfessoraIA } from '@/components/ProfessoraIA';
 import ReactMarkdown from 'react-markdown';
 
 interface VadeMecumLegalCode {
@@ -46,6 +47,9 @@ const VadeMecumUltraFast: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [articles, setArticles] = useState<VadeMecumArticle[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Estado para Professora IA
+  const [showProfessora, setShowProfessora] = useState(false);
   
   // Estado centralizado para modais de conteúdo gerado
   const [generatedModal, setGeneratedModal] = useState<{
@@ -185,7 +189,21 @@ const VadeMecumUltraFast: React.FC = () => {
 
   // Função para validar se tem número de artigo válido
   const isValidArticleNumber = useCallback((articleNumber: string) => {
-    return articleNumber && articleNumber.replace(/[^\d]/g, '').length > 0;
+    // Verifica se tem número e não é apenas texto de seção/capítulo
+    if (!articleNumber) return false;
+    
+    // Remove caracteres não numéricos e verifica se sobrou algo
+    const numbersOnly = articleNumber.replace(/[^\d]/g, '');
+    
+    // Se não tem números, não é um artigo numerado
+    if (numbersOnly.length === 0) return false;
+    
+    // Verifica se é um texto de seção/capítulo comum
+    const lowerText = articleNumber.toLowerCase();
+    const sectionWords = ['capítulo', 'capitulo', 'seção', 'secao', 'título', 'titulo', 'livro', 'parte'];
+    if (sectionWords.some(word => lowerText.includes(word))) return false;
+    
+    return true;
   }, []);
 
   // Callback para quando conteúdo é gerado
@@ -373,10 +391,10 @@ const VadeMecumUltraFast: React.FC = () => {
           transition={{ delay: index * 0.02 }}
           className="mb-2"
         >
-          <Card className="bg-muted/30 border-muted/50 hover:bg-muted/40 transition-colors">
+          <Card className="bg-muted/20 border-muted/40 hover:bg-muted/30 transition-colors">
             <CardContent className="p-2">
               <div className="text-center">
-                <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                <div className="text-xs text-muted-foreground font-medium tracking-wide">
                   {articleContent}
                 </div>
               </div>
@@ -812,7 +830,13 @@ const VadeMecumUltraFast: React.FC = () => {
             
             <div className="flex flex-wrap gap-3">
               <Button
-                onClick={() => navigator.clipboard.writeText(generatedModal.content)}
+                onClick={() => {
+                  navigator.clipboard.writeText(generatedModal.content);
+                  toast({
+                    title: "✅ Conteúdo copiado!",
+                    description: "O conteúdo foi copiado para a área de transferência.",
+                  });
+                }}
                 variant="outline"
                 size="sm"
               >
@@ -837,7 +861,7 @@ const VadeMecumUltraFast: React.FC = () => {
                 <p className="text-sm text-muted-foreground mb-4">
                   A Professora IA está disponível para tirar todas as suas dúvidas sobre este artigo
                 </p>
-                <ProfessoraIAFloatingButton onOpen={() => {}} />
+                <ProfessoraIAFloatingButton onOpen={() => setShowProfessora(true)} />
                 <p className="text-xs text-muted-foreground mt-3">
                   💡 Clique para abrir uma conversa personalizada sobre este tema
                 </p>
@@ -846,6 +870,20 @@ const VadeMecumUltraFast: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Professora IA Modal */}
+      <ProfessoraIA 
+        isOpen={showProfessora}
+        onClose={() => setShowProfessora(false)}
+        video={{
+          title: generatedModal.articleNumber ? `Art. ${generatedModal.articleNumber}` : "Consulta Jurídica",
+          area: selectedCode?.fullName || "Vade Mecum",
+          assunto: generatedModal.content ? 
+            (generatedModal.type === 'explicar' ? 'Explicação do Artigo' : 'Exemplo Prático') : 
+            'Consulta Geral',
+          conteudo: generatedModal.content || 'Consulta sobre artigos do Vade Mecum'
+        }} 
+      />
     </div>
   );
 };
