@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { 
   Search, ArrowLeft, Scale, BookOpen, 
   ChevronRight, Copy, X, Home, FileText, Scroll,
-  Volume2, Lightbulb, Bookmark
+  Volume2, Lightbulb, Bookmark, Brain
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,13 +38,28 @@ interface VadeMecumArticle {
 const articlesCache = new Map<string, VadeMecumArticle[]>();
 let isPreloading = false;
 
-export const VadeMecumUltraFast: React.FC = () => {
+const VadeMecumUltraFast: React.FC = () => {
   const [view, setView] = useState<'home' | 'codes' | 'articles'>('home');
   const [categoryType, setCategoryType] = useState<'articles' | 'statutes' | null>(null);
   const [selectedCode, setSelectedCode] = useState<VadeMecumLegalCode | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [articles, setArticles] = useState<VadeMecumArticle[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Estado centralizado para modais de conteúdo gerado
+  const [generatedModal, setGeneratedModal] = useState<{
+    open: boolean;
+    type: 'explicar' | 'exemplo';
+    content: string;
+    articleNumber: string;
+    hasValidNumber: boolean;
+  }>({
+    open: false,
+    type: 'explicar',
+    content: '',
+    articleNumber: '',
+    hasValidNumber: false
+  });
   
   const searchRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -102,30 +117,30 @@ export const VadeMecumUltraFast: React.FC = () => {
       textColor: 'text-yellow-600 dark:text-yellow-400'
     },
     { 
-      id: 'ctb', name: 'CTB', fullName: 'Código de Trânsito Brasileiro', 
-      description: 'Normas de trânsito e transporte', 
-      icon: '🚗', 
-      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
-      textColor: 'text-yellow-600 dark:text-yellow-400'
-    },
-    { 
-      id: 'ctn', name: 'CTN', fullName: 'Código Tributário Nacional', 
-      description: 'Sistema tributário nacional', 
-      icon: '💰', 
-      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
-      textColor: 'text-yellow-600 dark:text-yellow-400'
-    },
-    { 
-      id: 'ce', name: 'CE', fullName: 'Código Eleitoral', 
-      description: 'Legislação eleitoral brasileira', 
-      icon: '🗳️', 
-      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
-      textColor: 'text-yellow-600 dark:text-yellow-400'
-    },
-    { 
-      id: 'cf88', name: 'CF88', fullName: 'Constituição Federal de 1988', 
-      description: 'Lei fundamental do Brasil', 
+      id: 'cf88', name: 'CF/88', fullName: 'Constituição Federal de 1988', 
+      description: 'Carta Magna do Brasil', 
       icon: '🏛️', 
+      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
+      textColor: 'text-yellow-600 dark:text-yellow-400'
+    },
+    { 
+      id: 'cp', name: 'CP', fullName: 'Código Penal', 
+      description: 'Crimes e suas penalidades', 
+      icon: '⚖️', 
+      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
+      textColor: 'text-yellow-600 dark:text-yellow-400'
+    },
+    { 
+      id: 'cpc', name: 'CPC', fullName: 'Código de Processo Civil', 
+      description: 'Procedimentos judiciais cíveis', 
+      icon: '📋', 
+      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
+      textColor: 'text-yellow-600 dark:text-yellow-400'
+    },
+    { 
+      id: 'cpp', name: 'CPP', fullName: 'Código de Processo Penal', 
+      description: 'Procedimentos judiciais criminais', 
+      icon: '🔍', 
       color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
       textColor: 'text-yellow-600 dark:text-yellow-400'
     },
@@ -137,140 +152,140 @@ export const VadeMecumUltraFast: React.FC = () => {
       textColor: 'text-yellow-600 dark:text-yellow-400'
     },
     { 
-      id: 'cp', name: 'CP', fullName: 'Código Penal', 
-      description: 'Crimes e suas punições', 
-      icon: '🔫', 
-      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
-      textColor: 'text-yellow-600 dark:text-yellow-400'
-    },
-    { 
-      id: 'cpc', name: 'CPC', fullName: 'Código de Processo Civil', 
-      description: 'Procedimentos processuais cíveis', 
-      icon: '📋', 
-      color: 'bg-gradient-to-br from-store-primary/20 to-store-primary/10 border border-store-primary/30',
-      textColor: 'text-store-primary'
-    },
-    { 
-      id: 'cpp', name: 'CPP', fullName: 'Código de Processo Penal', 
-      description: 'Procedimentos penais', 
-      icon: '🔪', 
+      id: 'ctn', name: 'CTN', fullName: 'Código Tributário Nacional', 
+      description: 'Normas gerais de direito tributário', 
+      icon: '💰', 
       color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
       textColor: 'text-yellow-600 dark:text-yellow-400'
     }
   ], []);
 
+  // Estatutos com design consistente
   const statuteCodes = useMemo<VadeMecumLegalCode[]>(() => [
     { 
-      id: 'estatuto-oab', name: 'Estatuto da OAB', fullName: 'Estatuto da Advocacia e da OAB', 
-      description: 'Lei nº 8.906/1994', 
-      icon: '🎓', 
-      color: 'bg-gradient-to-br from-tools-primary/30 to-tools-primary/20 border border-tools-primary/50',
-      textColor: 'text-tools-primary'
+      id: 'eca', name: 'ECA', fullName: 'Estatuto da Criança e do Adolescente', 
+      description: 'Proteção integral à criança e adolescente', 
+      icon: '👶', 
+      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
+      textColor: 'text-yellow-600 dark:text-yellow-400'
     },
     { 
-      id: 'estatuto-idoso', name: 'Estatuto do Idoso', fullName: 'Estatuto do Idoso', 
-      description: 'Lei nº 10.741/2003', 
+      id: 'estatuto_idoso', name: 'Estatuto do Idoso', fullName: 'Estatuto da Pessoa Idosa', 
+      description: 'Direitos das pessoas com idade igual ou superior a 60 anos', 
       icon: '👴', 
-      color: 'bg-gradient-to-br from-community-secondary/20 to-community-secondary/10 border border-community-secondary/30',
-      textColor: 'text-community-secondary'
+      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
+      textColor: 'text-yellow-600 dark:text-yellow-400'
     }
   ], []);
 
-  const currentCodes = categoryType === 'articles' ? articleCodes : statuteCodes;
+  const currentCodes = useMemo(() => {
+    return categoryType === 'statutes' ? statuteCodes : articleCodes;
+  }, [categoryType, articleCodes, statuteCodes]);
 
-  // Busca otimizada instantânea com prioridade para números exatos
+  // Função para validar se tem número de artigo válido
+  const isValidArticleNumber = useCallback((articleNumber: string) => {
+    return articleNumber && articleNumber.replace(/[^\d]/g, '').length > 0;
+  }, []);
+
+  // Callback para quando conteúdo é gerado
+  const handleContentGenerated = useCallback((content: string, type: 'explicar' | 'exemplo', articleNumber: string) => {
+    setGeneratedModal({
+      open: true,
+      type,
+      content,
+      articleNumber,
+      hasValidNumber: isValidArticleNumber(articleNumber)
+    });
+  }, [isValidArticleNumber]);
+
+  // Filtro inteligente de artigos
   const filteredArticles = useMemo(() => {
-    if (!searchTerm.trim()) return articles.slice(0, 100);
-    
-    const term = searchTerm.trim().toLowerCase();
-    
-    // Se for apenas um número, priorizar busca exata pelo número do artigo
-    if (/^\d+$/.test(term)) {
-      const exactMatch = articles.filter(article => {
-        const number = article["Número do Artigo"]?.toLowerCase() || '';
-        return number === term || number === `art. ${term}` || number === `artigo ${term}`;
-      });
-      
-      if (exactMatch.length > 0) {
-        return exactMatch;
-      }
-      
-      // Se não encontrou exato, buscar que contenha o número
-      const partialMatch = articles.filter(article => {
-        const number = article["Número do Artigo"]?.toLowerCase() || '';
-        return number.includes(term);
-      });
-      
-      if (partialMatch.length > 0) {
-        return partialMatch.slice(0, 20);
-      }
-    }
-    
-    // Busca geral no conteúdo
-    return articles.filter(article => {
-      const number = article["Número do Artigo"]?.toLowerCase() || '';
-      const content = article.Artigo?.toLowerCase() || '';
-      return number.includes(term) || content.includes(term);
-    }).slice(0, 50);
+    if (!searchTerm.trim()) return articles;
+
+    const searchLower = searchTerm.toLowerCase().trim();
+    const searchNumbers = searchTerm.replace(/[^\d]/g, '');
+
+    return articles
+      .map(article => {
+        const articleNumber = article["Número do Artigo"] || article.numero || '';
+        const articleContent = article["Artigo"] || article.conteudo || '';
+        
+        let score = 0;
+        
+        // Prioridade 1: Match exato no número do artigo
+        if (articleNumber.toLowerCase() === searchLower) {
+          score = 1000;
+        }
+        // Prioridade 2: Número puro corresponde
+        else if (searchNumbers && articleNumber.replace(/[^\d]/g, '') === searchNumbers) {
+          score = 900;
+        }
+        // Prioridade 3: Número do artigo contém o termo
+        else if (articleNumber.toLowerCase().includes(searchLower)) {
+          score = 800;
+        }
+        // Prioridade 4: Conteúdo contém o termo
+        else if (articleContent.toLowerCase().includes(searchLower)) {
+          score = 100;
+        }
+        
+        return { article, score };
+      })
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 100) // Limita a 100 resultados para performance
+      .map(item => item.article);
   }, [articles, searchTerm]);
 
-  // Buscar artigos com cache instantâneo
+  // Carregar artigos com cache otimizado
   const loadArticles = useCallback(async (code: VadeMecumLegalCode) => {
     const cacheKey = `articles-${code.id}`;
     
-    // Verificar cache primeiro
-    const cached = articlesCache.get(cacheKey);
-    if (cached) {
-      setArticles(cached);
+    // Verifica cache primeiro
+    if (articlesCache.has(cacheKey)) {
+      setArticles(articlesCache.get(cacheKey)!);
       setSelectedCode(code);
       setView('articles');
+      setSearchTerm('');
       return;
     }
 
     setIsLoading(true);
+    
     try {
-      const tableMap: Record<string, string> = {
-        'cc': 'CC',
-        'cdc': 'CDC', 
-        'cf88': 'CF88',
-        'clt': 'CLT',
-        'cp': 'CP',
-        'cpc': 'CPC',
-        'cpp': 'CPP',
-        'ctb': 'CTB',
-        'ctn': 'CTN',
-        'ce': 'CE',
-        'estatuto-oab': 'ESTATUTO - OAB',
-        'estatuto-idoso': 'ESTATUTO - IDOSO'
-      };
-
-      const tableName = tableMap[code.id];
-      if (!tableName) return;
-
-      const { data } = await supabase
+      let tableName = code.id.toUpperCase();
+      if (tableName === 'CF88') tableName = 'CF88';
+      else if (tableName === 'CDC') tableName = 'CDC';
+      
+      const { data, error } = await supabase
         .from(tableName as any)
         .select('id, "Número do Artigo", Artigo')
-        .order('id', { ascending: true });
+        .order('id', { ascending: true })
+        .limit(1000);
 
-      if (data) {
-        const transformed = data.map((item: any) => ({
-          id: String(item.id),
-          numero: item["Número do Artigo"] || String(item.id),
-          conteudo: item.Artigo || '',
-          codigo_id: code.id,
-          "Número do Artigo": item["Número do Artigo"],
-          "Artigo": item.Artigo
-        }));
-        
-        articlesCache.set(cacheKey, transformed);
-        setArticles(transformed);
-        setSelectedCode(code);
-        setView('articles');
-      }
-    } catch (error) {
+      if (error) throw error;
+
+      const transformedArticles = (data || []).map((item: any) => ({
+        id: String(item.id),
+        numero: item["Número do Artigo"] || String(item.id),
+        conteudo: item.Artigo || '',
+        codigo_id: code.id,
+        "Número do Artigo": item["Número do Artigo"],
+        "Artigo": item.Artigo
+      }));
+
+      // Cache para uso futuro
+      articlesCache.set(cacheKey, transformedArticles);
+      
+      setArticles(transformedArticles);
+      setSelectedCode(code);
+      setView('articles');
+      setSearchTerm('');
+      
+    } catch (error: any) {
       toast({
-        title: "Erro",
-        description: "Falha ao carregar artigos",
+        title: "❌ Erro ao carregar artigos",
+        description: error.message || "Não foi possível carregar os artigos.",
         variant: "destructive"
       });
     } finally {
@@ -278,9 +293,11 @@ export const VadeMecumUltraFast: React.FC = () => {
     }
   }, [toast]);
 
+  // Navegação otimizada
   const handleBack = useCallback(() => {
     if (view === 'articles') {
       setView('codes');
+      setArticles([]);
       setSearchTerm('');
     } else if (view === 'codes') {
       setView('home');
@@ -295,156 +312,175 @@ export const VadeMecumUltraFast: React.FC = () => {
     setView('codes');
   }, []);
 
-  const copyArticle = useCallback((article: VadeMecumArticle) => {
-    const text = `${article["Número do Artigo"] || ''}\n\n${article.Artigo || ''}`;
-    navigator.clipboard.writeText(text);
+  const copyArticle = useCallback((content: string) => {
+    navigator.clipboard.writeText(content);
     toast({
-      title: "Copiado!",
-      description: "Artigo copiado para a área de transferência"
+      title: "✅ Artigo copiado!",
+      description: "O conteúdo foi copiado para a área de transferência.",
     });
   }, [toast]);
 
-  // Componente do Card de Artigo com funcionalidades antigas
-  const VadeMecumArticleCard = ({ article, codeInfo, onCopy }: {
-    article: VadeMecumArticle;
-    codeInfo: VadeMecumLegalCode | null;
-    onCopy: () => void;
-  }) => {
-    const [loadingState, setLoadingState] = useState<'explicar' | 'exemplo' | null>(null);
-    const [explanation, setExplanation] = useState('');
-    const [practicalExample, setPracticalExample] = useState('');
-    const [showExplanation, setShowExplanation] = useState(false);
-    const [showExample, setShowExample] = useState(false);
-    const [isFavorited, setIsFavorited] = useState(false);
+  // Função para sintetizar voz (Web Speech API)
+  const speakText = useCallback((text: string) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'pt-BR';
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+      
+      toast({
+        title: "🔊 Reproduzindo áudio",
+        description: "O texto está sendo reproduzido em voz alta.",
+      });
+    } else {
+      toast({
+        title: "❌ Recurso não disponível",
+        description: "Seu navegador não suporta síntese de voz.",
+        variant: "destructive"
+      });
+    }
+  }, [toast]);
 
-    // Debug logs
-    console.log('Modal states:', { showExplanation, showExample, explanation: explanation.length, practicalExample: practicalExample.length });
+  // Componente de Card do Artigo
+  const VadeMecumArticleCard = ({ article, index }: { article: VadeMecumArticle; index: number }) => {
+    const [loadingState, setLoadingState] = useState<{
+      explanation: boolean;
+      practicalExample: boolean;
+    }>({
+      explanation: false,
+      practicalExample: false
+    });
 
-    const articleText = article.Artigo || '';
     const articleNumber = article["Número do Artigo"] || article.numero || '';
+    const articleContent = article["Artigo"] || article.conteudo || '';
     
-    // Verificar se realmente há um número do artigo válido (incluindo números maiores que 9)
-    const hasArticleNumber = articleNumber && 
-      articleNumber.toString().trim() !== '' && 
-      articleNumber.toString().trim() !== 'NULL' &&
-      (articleNumber.toString().includes('Art') || 
-       articleNumber.toString().includes('°') || 
-       articleNumber.toString().includes('º') ||
-       /^\d+$/.test(articleNumber.toString().trim())); // Aceitar números puros também
+    // Verifica se tem número válido (contém dígitos após remover caracteres não numéricos)
+    const hasValidNumber = isValidArticleNumber(articleNumber);
 
-    const callGeminiAPI = async (action: 'explicar' | 'exemplo' | 'apresentar') => {
-      setLoadingState(action === 'apresentar' ? null : action);
+    const handleExplain = async () => {
+      setLoadingState(prev => ({ ...prev, explanation: true }));
+      
       try {
-        console.log('Chamando Gemini API para:', action);
+        console.log('Chamando Gemini API para: explicar');
+        
         const { data, error } = await supabase.functions.invoke('gemini-vademecum', {
           body: {
-            action,
-            article: articleText,
-            articleNumber,
-            codeName: codeInfo?.name || 'Código Legal'
+            action: 'explicar',
+            articleNumber: articleNumber,
+            codeName: selectedCode?.name || '',
+            hasArticle: !!articleContent
           }
         });
 
-        console.log('Resposta da API:', data, 'Erro:', error);
-
-        if (error) throw error;
-
-        if (action === 'explicar') {
-          const content = data.content || 'Explicação gerada com sucesso.';
-          console.log('Definindo explicação:', content);
-          setExplanation(content);
-          setShowExplanation(true);
-          console.log('Modal de explicação aberto:', true);
-        } else if (action === 'exemplo') {
-          const content = data.content || 'Exemplo gerado com sucesso.';
-          console.log('Definindo exemplo:', content);
-          setPracticalExample(content);
-          setShowExample(true);
-          console.log('Modal de exemplo aberto:', true);
+        if (error) {
+          console.error('Erro na API Gemini:', error);
+          throw new Error('Erro ao gerar explicação');
         }
 
+        if (data?.content) {
+          console.log('Explicação gerada:', data.content);
+          handleContentGenerated(data.content, 'explicar', articleNumber);
+          toast({
+            title: "✅ Explicação gerada!",
+            description: "A explicação foi gerada com sucesso.",
+          });
+        }
+      } catch (error: any) {
         toast({
-          title: "Sucesso!",
-          description: `${action === 'explicar' ? 'Explicação' : 'Exemplo prático'} gerada com IA`,
-        });
-      } catch (error) {
-        console.error('Erro na API Gemini:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível gerar o conteúdo. Tente novamente.",
+          title: "❌ Erro ao gerar explicação",
+          description: error.message,
           variant: "destructive"
         });
       } finally {
-        setLoadingState(null);
+        setLoadingState(prev => ({ ...prev, explanation: false }));
       }
     };
 
-    const shareArticle = async () => {
-      onCopy(); // Sempre usar copy como fallback
-    };
-
-    const playAudio = () => {
-      if ('speechSynthesis' in window) {
-        // Expandir abreviações para narração correta
-        const expandedText = articleText
-          .replace(/\bArt\./gi, 'Artigo')
-          .replace(/\bInc\./gi, 'Inciso')
-          .replace(/\bPar\./gi, 'Parágrafo')
-          .replace(/\b§/g, 'Parágrafo')
-          .replace(/\bº/g, 'grau')
-          .replace(/\b1º/g, 'primeiro')
-          .replace(/\b2º/g, 'segundo') 
-          .replace(/\b3º/g, 'terceiro')
-          .replace(/\b4º/g, 'quarto')
-          .replace(/\b5º/g, 'quinto')
-          .replace(/\b6º/g, 'sexto')
-          .replace(/\b7º/g, 'sétimo')
-          .replace(/\b8º/g, 'oitavo')
-          .replace(/\b9º/g, 'nono')
-          .replace(/\b10º/g, 'décimo')
-          .replace(/\bII\b/g, 'dois')
-          .replace(/\bIII\b/g, 'três')
-          .replace(/\bIV\b/g, 'quatro')
-          .replace(/\bV\b/g, 'cinco')
-          .replace(/\bVI\b/g, 'seis')
-          .replace(/\bVII\b/g, 'sete')
-          .replace(/\bVIII\b/g, 'oito')
-          .replace(/\bIX\b/g, 'nove')
-          .replace(/\bX\b/g, 'dez');
-
-        const speechText = hasArticleNumber ? `Artigo ${articleNumber}. ${expandedText}` : expandedText;
-        
-        const utterance = new SpeechSynthesisUtterance(speechText);
-        utterance.lang = 'pt-BR';
-        utterance.rate = 0.8;
-        speechSynthesis.speak(utterance);
-        
-        toast({
-          title: "Reproduzindo áudio",
-          description: hasArticleNumber ? "Artigo sendo lido em voz alta" : "Texto sendo lido em voz alta",
+    const handleExample = async () => {
+      setLoadingState(prev => ({ ...prev, practicalExample: true }));
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('gemini-vademecum', {
+          body: {
+            action: 'exemplo',
+            articleNumber: articleNumber,
+            codeName: selectedCode?.name || '',
+            hasArticle: !!articleContent
+          }
         });
-      } else {
+
+        if (error) {
+          console.error('Erro na API Gemini:', error);
+          throw new Error('Erro ao gerar exemplo');
+        }
+
+        if (data?.content) {
+          console.log('Exemplo gerado:', data.content);
+          handleContentGenerated(data.content, 'exemplo', articleNumber);
+          toast({
+            title: "✅ Exemplo gerado!",
+            description: "O exemplo prático foi gerado com sucesso.",
+          });
+        }
+      } catch (error: any) {
         toast({
-          title: "Recurso não disponível",
-          description: "Seu navegador não suporta síntese de voz",
+          title: "❌ Erro ao gerar exemplo",
+          description: error.message,
           variant: "destructive"
         });
+      } finally {
+        setLoadingState(prev => ({ ...prev, practicalExample: false }));
       }
     };
 
-    // Layout diferenciado baseado no tipo de conteúdo
-    if (!hasArticleNumber) {
-      // Layout compacto para textos legais (títulos, seções, etc.)
+    // Layout diferente para cards sem número válido
+    if (!hasValidNumber) {
       return (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ delay: index * 0.05 }}
+          className="mb-3"
         >
-          <Card className="hover:shadow-sm transition-all duration-300 glass-effect-modern border-border/30 bg-muted/20">
-            <CardContent className="p-4 text-center">
-              <div className="text-sm font-medium text-foreground/80 leading-relaxed">
-                {articleText}
+          <Card className="bg-card/50 border-muted">
+            <CardContent className="p-3">
+              <div className="text-center">
+                <div className="vademecum-text text-foreground/80 text-sm leading-relaxed">
+                  {articleContent}
+                </div>
+                
+                {/* Apenas botões de IA para cards sem número */}
+                <div className="flex items-center justify-center gap-2 mt-3 pt-3 border-t border-muted">
+                  <Button
+                    onClick={handleExplain}
+                    disabled={loadingState.explanation}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    {loadingState.explanation ? (
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                    ) : (
+                      <Brain className="h-3 w-3" />
+                    )}
+                    <span className="ml-1">Explicar</span>
+                  </Button>
+                  <Button
+                    onClick={handleExample}
+                    disabled={loadingState.practicalExample}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    {loadingState.practicalExample ? (
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                    ) : (
+                      <Lightbulb className="h-3 w-3" />
+                    )}
+                    <span className="ml-1">Exemplo</span>
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -452,212 +488,86 @@ export const VadeMecumUltraFast: React.FC = () => {
       );
     }
 
-    // Layout completo para artigos com número
+    // Layout para cards com número válido
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ delay: index * 0.05 }}
+        className="mb-4"
       >
-        <Card className="hover:shadow-md transition-all duration-300 glass-effect-modern border-border/50">
+        <Card className="hover:shadow-md transition-all duration-200 bg-card border">
           <CardContent className="p-4">
-            {/* Cabeçalho com número do artigo */}
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-primary" />
-                <span className="font-semibold text-primary">
-                  {articleNumber}
-                </span>
+            <div className="space-y-3">
+              {/* Cabeçalho do Artigo */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-lg text-primary mb-2">
+                    Art. {articleNumber}
+                  </h3>
+                  <div className="vademecum-text text-foreground">
+                    {articleContent.split('\n').map((paragraph, i) => (
+                      <p key={i} className="mb-2 last:mb-0 text-sm leading-relaxed">
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-2">
+
+              {/* Ações do Artigo */}
+              <div className="flex flex-wrap gap-2 pt-3 border-t border-muted">
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsFavorited(!isFavorited)}
-                  className={`${isFavorited ? 'text-primary' : 'text-muted-foreground'} hover:text-primary transition-colors`}
-                >
-                  <Bookmark className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
-                </Button>
-                <Button
+                  onClick={() => copyArticle(articleContent)}
                   variant="outline"
                   size="sm"
-                  onClick={onCopy}
-                  className="h-8 text-xs border-primary/20 hover:border-primary/40"
+                  className="text-xs"
                 >
                   <Copy className="h-3 w-3 mr-1" />
                   Copiar
                 </Button>
+                <Button
+                  onClick={() => speakText(articleContent)}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                >
+                  <Volume2 className="h-3 w-3 mr-1" />
+                  Ouvir
+                </Button>
+                
+                <Button
+                  onClick={handleExplain}
+                  disabled={loadingState.explanation}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                >
+                  {loadingState.explanation ? (
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                  ) : (
+                    <Brain className="h-3 w-3 mr-1" />
+                  )}
+                  Explicar
+                </Button>
+                <Button
+                  onClick={handleExample}
+                  disabled={loadingState.practicalExample}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                >
+                  {loadingState.practicalExample ? (
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                  ) : (
+                    <Lightbulb className="h-3 w-3 mr-1" />
+                  )}
+                  Exemplo
+                </Button>
               </div>
             </div>
-
-            {/* Texto do artigo com fonte legível */}
-            <div className="vademecum-text text-foreground mb-4 whitespace-pre-wrap">
-              {articleText}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              <Button
-                onClick={() => callGeminiAPI('explicar')}
-                disabled={loadingState !== null}
-                className="bg-gradient-to-r from-primary to-accent-legal hover:from-primary/90 hover:to-accent-legal/90 text-primary-foreground border-none"
-                size="sm"
-              >
-                {loadingState === 'explicar' ? (
-                  <div className="animate-spin h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full mr-2" />
-                ) : (
-                  <BookOpen className="h-4 w-4 mr-2" />
-                )}
-                {loadingState === 'explicar' ? 'Gerando explicação...' : 'Explicar'}
-              </Button>
-              <Button
-                onClick={() => callGeminiAPI('exemplo')}
-                disabled={loadingState !== null}
-                variant="outline"
-                size="sm"
-                className="border-primary/30 hover:border-primary/50 hover:bg-primary/10"
-              >
-                {loadingState === 'exemplo' ? (
-                  <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mr-2" />
-                ) : (
-                  <Lightbulb className="h-4 w-4 mr-2" />
-                )}
-                {loadingState === 'exemplo' ? 'Gerando exemplo...' : 'Exemplo'}
-              </Button>
-              <Button
-                onClick={playAudio}
-                variant="ghost"
-                size="sm"
-                className="hover:bg-muted/50"
-              >
-                <Volume2 className="h-4 w-4 mr-2" />
-                Ouvir
-              </Button>
-            </div>
-
-            {/* Explanation Content - APENAS para artigos com número válido */}
-            {showExplanation && explanation && hasArticleNumber && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-4 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-lg"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <BookOpen className="h-4 w-4 text-primary" />
-                  <h4 className="font-semibold text-primary">Explicação</h4>
-                </div>
-                <div className="text-sm text-foreground">
-                  <div dangerouslySetInnerHTML={{ __html: explanation.replace(/\n/g, '<br />') }} />
-                </div>
-              </motion.div>
-            )}
-
-            {/* Example Content - APENAS para artigos com número válido */}
-            {showExample && practicalExample && hasArticleNumber && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-4 bg-gradient-to-br from-success/10 to-success/5 border border-success/20 rounded-lg"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <Lightbulb className="h-4 w-4 text-success" />
-                  <h4 className="font-semibold text-success">Exemplo Prático</h4>
-                </div>
-                <div className="text-sm text-foreground">
-                  <div dangerouslySetInnerHTML={{ __html: practicalExample.replace(/\n/g, '<br />') }} />
-                </div>
-              </motion.div>
-            )}
           </CardContent>
         </Card>
-
-        {/* Modal de Explicação */}
-        <Dialog open={showExplanation} onOpenChange={setShowExplanation}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto z-50">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-primary" />
-                Explicação - {hasArticleNumber ? articleNumber : 'Texto Legal'}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="vademecum-text p-4 bg-muted/50 rounded-lg">
-                {explanation ? (
-                  explanation.split('\n').map((line, index) => (
-                    <p key={index} className="mb-2 last:mb-0">{line}</p>
-                  ))
-                ) : (
-                  <p>Carregando explicação...</p>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => navigator.clipboard.writeText(explanation)}
-                  variant="outline"
-                  size="sm"
-                >
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copiar Explicação
-                </Button>
-                <Button onClick={() => setShowExplanation(false)} size="sm">
-                  Fechar
-                </Button>
-              </div>
-              
-              {/* Professora IA para tirar mais dúvidas */}
-              <div className="pt-4 border-t">
-                <ProfessoraIAFloatingButton onOpen={() => {}} />
-                <p className="text-xs text-muted-foreground mt-2 text-center">
-                  Tem mais dúvidas? Converse com a Professora IA
-                </p>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Modal de Exemplo */}
-        <Dialog open={showExample} onOpenChange={setShowExample}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto z-50">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Lightbulb className="h-5 w-5 text-warning" />
-                Exemplo Prático - {hasArticleNumber ? articleNumber : 'Texto Legal'}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="vademecum-text p-4 bg-muted/50 rounded-lg">
-                {practicalExample ? (
-                  practicalExample.split('\n').map((line, index) => (
-                    <p key={index} className="mb-2 last:mb-0">{line}</p>
-                  ))
-                ) : (
-                  <p>Carregando exemplo...</p>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => navigator.clipboard.writeText(practicalExample)}
-                  variant="outline"
-                  size="sm"
-                >
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copiar Exemplo
-                </Button>
-                <Button onClick={() => setShowExample(false)} size="sm">
-                  Fechar
-                </Button>
-              </div>
-              
-              {/* Professora IA para tirar mais dúvidas */}
-              <div className="pt-4 border-t">
-                <ProfessoraIAFloatingButton onOpen={() => {}} />
-                <p className="text-xs text-muted-foreground mt-2 text-center">
-                  Tem mais dúvidas? Converse com a Professora IA
-                </p>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </motion.div>
     );
   };
@@ -798,40 +708,106 @@ export const VadeMecumUltraFast: React.FC = () => {
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               ref={searchRef}
-              placeholder="Buscar artigo (ex: 1, 123, direito)..."
+              placeholder="Buscar por artigo ou conteúdo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
-            {searchTerm && (
-              <div className="absolute right-3 top-3 text-xs text-muted-foreground">
-                {filteredArticles.length} encontrado(s)
-              </div>
-            )}
           </div>
         </div>
       </div>
 
       <div className="p-4">
-        <div className="max-w-4xl mx-auto space-y-4">
-          {filteredArticles.map((article) => (
-            <VadeMecumArticleCard
-              key={article.id}
-              article={article}
-              codeInfo={selectedCode}
-              onCopy={() => copyArticle(article)}
-            />
-          ))}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span className="ml-3 text-muted-foreground">Carregando artigos...</span>
+          </div>
+        ) : filteredArticles.length === 0 ? (
+          <div className="text-center py-12">
+            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">
+              {searchTerm ? 'Nenhum artigo encontrado.' : 'Nenhum artigo disponível.'}
+            </p>
+          </div>
+        ) : (
+          <div className="max-w-4xl mx-auto">
+            {filteredArticles.map((article, index) => (
+              <VadeMecumArticleCard key={`${article.id}-${index}`} article={article} index={index} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Modal Centralizado para Conteúdo Gerado */}
+      <Dialog open={generatedModal.open} onOpenChange={(open) => setGeneratedModal(prev => ({ ...prev, open }))}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              {generatedModal.type === 'explicar' ? (
+                <Brain className="h-6 w-6 text-primary" />
+              ) : (
+                <Lightbulb className="h-6 w-6 text-warning" />
+              )}
+              {generatedModal.type === 'explicar' ? 'Explicação' : 'Exemplo Prático'}
+              {generatedModal.hasValidNumber && ` - Art. ${generatedModal.articleNumber}`}
+            </DialogTitle>
+          </DialogHeader>
           
-          {filteredArticles.length === 0 && !isLoading && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                {searchTerm ? 'Nenhum artigo encontrado para sua busca.' : 'Carregando artigos...'}
+          <div className="space-y-6">
+            <div className="vademecum-text p-6 bg-muted/30 rounded-lg border">
+              {generatedModal.content ? (
+                generatedModal.content.split('\n').map((line, index) => (
+                  <p key={index} className="mb-3 last:mb-0 text-base leading-relaxed">
+                    {line}
+                  </p>
+                ))
+              ) : (
+                <p className="text-muted-foreground">Carregando conteúdo...</p>
+              )}
+            </div>
+            
+            <div className="flex flex-wrap gap-3">
+              {generatedModal.hasValidNumber && (
+                <>
+                  <Button
+                    onClick={() => navigator.clipboard.writeText(generatedModal.content)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copiar {generatedModal.type === 'explicar' ? 'Explicação' : 'Exemplo'}
+                  </Button>
+                  <Button
+                    onClick={() => speakText(generatedModal.content)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Volume2 className="h-4 w-4 mr-2" />
+                    Ouvir
+                  </Button>
+                </>
+              )}
+              <Button 
+                onClick={() => setGeneratedModal(prev => ({ ...prev, open: false }))} 
+                size="sm"
+              >
+                Fechar
+              </Button>
+            </div>
+            
+            {/* Professora IA */}
+            <div className="pt-4 border-t border-muted">
+              <div className="flex items-center justify-center">
+                <ProfessoraIAFloatingButton onOpen={() => {}} />
+              </div>
+              <p className="text-sm text-muted-foreground mt-3 text-center">
+                Tem mais dúvidas? Converse com a Professora IA para esclarecimentos adicionais
               </p>
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
