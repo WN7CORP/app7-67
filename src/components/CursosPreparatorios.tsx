@@ -13,7 +13,6 @@ import ReactMarkdown from 'react-markdown';
 import ProfessoraIA from './ProfessoraIA';
 import { ProfessoraIAFloatingButton } from './ProfessoraIAFloatingButton';
 import { LessonActionButtons } from './Cursos/LessonActionButtons';
-import { CourseDashboard } from './Cursos/CourseDashboard';
 
 type CursoTipo = 'iniciando' | 'faculdade' | null;
 
@@ -213,9 +212,6 @@ export const CursosPreparatorios = () => {
         </div>
 
         <div className="p-4 max-w-2xl mx-auto">
-          {/* Dashboard de estatísticas */}
-          <CourseDashboard courseType="iniciando" />
-
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold mb-2">Escolha seu tipo de curso</h2>
             <p className="text-muted-foreground">
@@ -319,8 +315,6 @@ export const CursosPreparatorios = () => {
               onEnded={handleVideoEnd}
               onNearEnd={handleNearVideoEnd}
               autoPlay={true}
-              courseType="faculdade"
-              showEnhancements={true}
               lesson={{
                 id: selectedAulaFaculdade.id,
                 area: selectedAulaFaculdade.semestre + 'º Semestre',

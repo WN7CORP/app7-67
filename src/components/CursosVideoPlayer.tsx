@@ -4,9 +4,6 @@ import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, SkipForward, Chevro
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LessonActionButtons } from '@/components/Cursos/LessonActionButtons';
-import { VideoNotes } from '@/components/Cursos/VideoNotes';
-import { QuizViewer } from '@/components/Cursos/QuizViewer';
-import { FlashcardsViewer } from '@/components/Cursos/FlashcardsViewer';
 
 interface CursosVideoPlayerProps {
   videoUrl: string;
@@ -24,8 +21,6 @@ interface CursosVideoPlayerProps {
     assunto: string;
     conteudo?: string;
   };
-  courseType?: string;
-  showEnhancements?: boolean;
 }
 
 export const CursosVideoPlayer = ({
@@ -37,9 +32,7 @@ export const CursosVideoPlayer = ({
   onEnded,
   onNearEnd,
   autoPlay = true,
-  lesson,
-  courseType,
-  showEnhancements = true
+  lesson
 }: CursosVideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -53,8 +46,6 @@ export const CursosVideoPlayer = ({
   const [showNextLessonAlert, setShowNextLessonAlert] = useState(false);
   const [nearEndTriggered, setNearEndTriggered] = useState(false);
   const [autoAdvanceCountdown, setAutoAdvanceCountdown] = useState(5);
-  const [showSidePanel, setShowSidePanel] = useState(false);
-  const [sidePanelTab, setSidePanelTab] = useState<'notes' | 'quiz' | 'flashcards'>('notes');
 
   // Auto-advance countdown effect
   useEffect(() => {
@@ -247,23 +238,13 @@ export const CursosVideoPlayer = ({
 
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  const handleSeekToNote = (time: number) => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.currentTime = time;
-    setCurrentTime(time);
-  };
-
   return (
     <div className="space-y-4">
-      <div className={`grid gap-4 ${showSidePanel ? 'grid-cols-3' : 'grid-cols-1'}`}>
-        {/* Player principal */}
-        <div className={showSidePanel ? 'col-span-2' : 'col-span-1'}>
-          <div 
-            className="relative bg-black rounded-lg overflow-hidden group"
-            onMouseEnter={() => setShowControls(true)}
-            onMouseLeave={() => setShowControls(false)}
-          >
+      <div 
+        className="relative bg-black rounded-lg overflow-hidden group"
+        onMouseEnter={() => setShowControls(true)}
+        onMouseLeave={() => setShowControls(false)}
+      >
       {/* Video Element */}
       <video
         ref={videoRef}
@@ -385,29 +366,17 @@ export const CursosVideoPlayer = ({
             </Button>
 
             {/* Fullscreen */}
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={toggleFullscreen}
-                className="text-white hover:text-white hover:bg-white/20"
-              >
-                <Maximize className="h-4 w-4" />
-              </Button>
-
-              {/* Botão para mostrar/ocultar painel lateral */}
-              {showEnhancements && (
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => setShowSidePanel(!showSidePanel)}
-                  className="text-white hover:text-white hover:bg-white/20"
-                >
-                  {showSidePanel ? 'Ocultar' : 'Extras'}
-                </Button>
-              )}
-            </div>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={toggleFullscreen}
+              className="text-white hover:text-white hover:bg-white/20"
+            >
+              <Maximize className="h-4 w-4" />
+            </Button>
           </div>
         </div>
+      </div>
 
       {/* Center Play Button (when paused) */}
       {!isPlaying && (
@@ -457,78 +426,6 @@ export const CursosVideoPlayer = ({
           </div>
         </div>
       )}
-          </div>
-        </div>
-
-        {/* Painel lateral com funcionalidades avançadas */}
-        {showSidePanel && showEnhancements && (
-          <div className="col-span-1">
-            <div className="sticky top-4">
-              <div className="bg-card border border-border rounded-lg overflow-hidden">
-                {/* Tabs do painel */}
-                <div className="flex border-b border-border">
-                  <button
-                    onClick={() => setSidePanelTab('notes')}
-                    className={`flex-1 px-4 py-2 text-sm font-medium ${
-                      sidePanelTab === 'notes' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'hover:bg-muted'
-                    }`}
-                  >
-                    Anotações
-                  </button>
-                  <button
-                    onClick={() => setSidePanelTab('quiz')}
-                    className={`flex-1 px-4 py-2 text-sm font-medium ${
-                      sidePanelTab === 'quiz' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'hover:bg-muted'
-                    }`}
-                  >
-                    Quiz
-                  </button>
-                  <button
-                    onClick={() => setSidePanelTab('flashcards')}
-                    className={`flex-1 px-4 py-2 text-sm font-medium ${
-                      sidePanelTab === 'flashcards' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'hover:bg-muted'
-                    }`}
-                  >
-                    Flashcards
-                  </button>
-                </div>
-
-                {/* Conteúdo do painel */}
-                <div className="h-[500px] overflow-hidden">
-                  {sidePanelTab === 'notes' && (
-                    <VideoNotes
-                      videoUrl={videoUrl}
-                      currentTime={currentTime}
-                      onSeekTo={handleSeekToNote}
-                    />
-                  )}
-                  
-                  {sidePanelTab === 'quiz' && lesson && (
-                    <QuizViewer
-                      courseType={courseType || 'iniciando'}
-                      areaOrSemestre={lesson.area}
-                      moduloOrTema={lesson.tema}
-                    />
-                  )}
-                  
-                  {sidePanelTab === 'flashcards' && lesson && (
-                    <FlashcardsViewer
-                      courseType={courseType}
-                      areaOrSemestre={lesson.area}
-                      moduloOrTema={lesson.tema}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Botões de Ação da Aula */}
