@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Search, Play, BookOpen, Clock, Users, ChevronRight, PlayCircle, TrendingUp, GraduationCap, UserPlus } from 'lucide-react';
-import yellowArrow from '@/assets/yellow-arrow.png';
 import { useNavigation } from '@/context/NavigationContext';
 import { useCursosOrganizados, useProgressoUsuario, CursoArea, CursoModulo, CursoAula } from '@/hooks/useCursosPreparatorios';
 import { useFaculdadeOrganizada, useProgressoFaculdade, SemestreFaculdade, ModuloFaculdade, TemaFaculdade, AulaFaculdadeCompleta } from '@/hooks/useCursoFaculdade';
@@ -803,11 +802,16 @@ export const CursosPreparatorios = () => {
                     </div>
                     
                     <div className="absolute top-2 right-2">
-                      <img 
-                        src={yellowArrow} 
-                        alt="Iniciar" 
-                        className="w-8 h-8 filter drop-shadow-lg"
-                      />
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedModulo(modulo);
+                        }}
+                        size="sm"
+                        className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-full p-2 border-none"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                   
@@ -960,7 +964,7 @@ export const CursosPreparatorios = () => {
                           Concluída
                         </Badge>
                       )}
-                      <img src={yellowArrow} alt="" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
 
@@ -1068,7 +1072,7 @@ export const CursosPreparatorios = () => {
                     
                     {/* Título sobreposto */}
                     <div className="absolute bottom-3 left-3 right-3">
-                      <h3 className="text-white font-bold text-lg mb-1 line-clamp-2">{tema.nome}</h3>
+                      <h3 className="text-white font-bold text-sm mb-1 line-clamp-2">{tema.nome}</h3>
                     </div>
                   </div>
                   
@@ -1095,7 +1099,7 @@ export const CursosPreparatorios = () => {
                       <span className="text-xs text-muted-foreground">
                         {progressoTema}% concluído
                       </span>
-                      <img src={yellowArrow} alt="" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </div>
@@ -1195,7 +1199,7 @@ export const CursosPreparatorios = () => {
                     
                     {/* Título sobreposto */}
                     <div className="absolute bottom-3 left-3 right-3">
-                      <h3 className="text-white font-bold text-lg mb-1 line-clamp-2">{modulo.nome}</h3>
+                      <h3 className="text-white font-bold text-sm mb-1 line-clamp-2">{modulo.nome}</h3>
                     </div>
                   </div>
                   
@@ -1222,7 +1226,7 @@ export const CursosPreparatorios = () => {
                       <span className="text-xs text-muted-foreground">
                         {progressoModulo}% concluído
                       </span>
-                      <img src={yellowArrow} alt="" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </div>
@@ -1328,7 +1332,7 @@ export const CursosPreparatorios = () => {
                       <span className="text-sm text-muted-foreground">
                         {progressoSemestre}% concluído
                       </span>
-                      <img src={yellowArrow} alt="" className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </div>
@@ -1406,7 +1410,6 @@ export const CursosPreparatorios = () => {
                 <div
                   key={`${area.nome}-${index}`}
                   className="bg-card rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer border border-border/50"
-                  onClick={() => setSelectedArea(area)}
                 >
                   <div className="relative">
                     <img 
@@ -1416,13 +1419,15 @@ export const CursosPreparatorios = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                     
-                    {/* Seta amarela no canto superior direito */}
-                    <div className="absolute top-4 right-4">
-                      <img 
-                        src={yellowArrow} 
-                        alt="Iniciar" 
-                        className="w-12 h-12 filter drop-shadow-lg"
-                      />
+                    {/* Botão de Play Centralizado */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <Button 
+                        onClick={() => setSelectedArea(area)}
+                        size="lg"
+                        className="bg-primary/90 hover:bg-primary text-primary-foreground rounded-full w-20 h-20 shadow-lg animate-pulse-glow"
+                      >
+                        <Play className="h-8 w-8" />
+                      </Button>
                     </div>
                     
                     {/* Informações da Área */}
@@ -1465,10 +1470,10 @@ export const CursosPreparatorios = () => {
                             e.stopPropagation();
                             setSelectedArea(area);
                           }}
-                          className="ml-4 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-6 py-2 rounded-full shadow-lg flex items-center gap-2"
+                          className="ml-4 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-2 rounded-full shadow-lg"
                         >
                           Iniciar Curso
-                          <img src={yellowArrow} alt="" className="w-4 h-4" />
+                          <ChevronRight className="h-4 w-4 ml-2" />
                         </Button>
                       </div>
                     </div>

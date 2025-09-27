@@ -107,28 +107,24 @@ export const CursosVideoPlayer = ({
       if (initialTime > 0) {
         video.currentTime = initialTime;
       }
-      // Set video properties for better compatibility
+      // Sempre inicializar como pausado para dar controle ao usuário
+      setIsPlaying(false);
       video.muted = false;
-      video.controls = false;
-      video.playsInline = true;
     };
 
     const handleCanPlay = () => {
-      // Set initial time if provided
+      // Iniciar reprodução automática quando aula é carregada
       if (initialTime > 0) {
         video.currentTime = initialTime;
       }
       // Auto-start video when lesson loads
       if (autoPlay) {
-        // Small delay to ensure video is ready
-        setTimeout(() => {
-          video.play().then(() => {
-            setIsPlaying(true);
-          }).catch((error) => {
-            console.warn('Autoplay blocked:', error);
-            setIsPlaying(false);
-          });
-        }, 100);
+        video.play().then(() => {
+          setIsPlaying(true);
+        }).catch((error) => {
+          console.warn('Autoplay blocked:', error);
+          setIsPlaying(false);
+        });
       }
     };
 
@@ -256,16 +252,11 @@ export const CursosVideoPlayer = ({
         className="w-full aspect-video"
         onClick={togglePlay}
         onLoadStart={() => setCurrentTime(0)}
-        preload="auto"
+        preload="metadata"
         playsInline
         muted={false}
-        autoPlay={autoPlay}
         crossOrigin="anonymous"
         controls={false}
-        onError={(e) => {
-          console.error('Video error:', e);
-          console.error('Video URL:', videoUrl);
-        }}
       />
 
       {/* Video Overlay with Title */}
