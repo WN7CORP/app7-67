@@ -19,4 +19,5 @@ export interface VadeMecumArticle {
 }
 
 // Exportar o componente ultra otimizado
+export { default } from './VadeMecumUltraFast';
 export { default as VadeMecum } from './VadeMecumUltraFast';
