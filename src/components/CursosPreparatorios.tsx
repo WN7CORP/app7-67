@@ -1,281 +1,36 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ArrowLeft, Search, Play, BookOpen, Clock, Users, ChevronRight, PlayCircle, TrendingUp, GraduationCap, UserPlus, FileText } from 'lucide-react';
+import { ArrowLeft, FileText, GraduationCap, UserPlus, ChevronRight, BookOpen, Play } from 'lucide-react';
 import { useNavigation } from '@/context/NavigationContext';
-import { useCursosOrganizados, useProgressoUsuario, CursoArea, CursoModulo, CursoAula } from '@/hooks/useCursosPreparatorios';
-import { useFaculdadeOrganizada, useProgressoFaculdade, SemestreFaculdade, ModuloFaculdade, TemaFaculdade, AulaFaculdadeCompleta } from '@/hooks/useCursoFaculdade';
-import { useCursosCoversPreloader } from '@/hooks/useCoverPreloader';
-import { CursosVideoPlayer } from '@/components/CursosVideoPlayer';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import ReactMarkdown from 'react-markdown';
-import ProfessoraIA from './ProfessoraIA';
-import { ProfessoraIAFloatingButton } from './ProfessoraIAFloatingButton';
-import { LessonActionButtons } from './Cursos/LessonActionButtons';
+import { CursoIniciando } from './Cursos/CursoIniciando';
+import { CursoFaculdade } from './Cursos/CursoFaculdade';
+import { CursoArtigoPorArtigo } from './Cursos/CursoArtigoPorArtigo';
+
 type CursoTipo = 'iniciando' | 'faculdade' | 'artigo' | null;
+
 export const CursosPreparatorios = () => {
-  const {
-    setCurrentFunction
-  } = useNavigation();
+  const { setCurrentFunction } = useNavigation();
   const [cursoTipo, setCursoTipo] = useState<CursoTipo>(null);
-  const [searchTerm, setSearchTerm] = useState('');
 
-  // Estados para Cursos Iniciando no Direito
-  const [selectedArea, setSelectedArea] = useState<CursoArea | null>(null);
-  const [selectedModulo, setSelectedModulo] = useState<CursoModulo | null>(null);
-  const [selectedAula, setSelectedAula] = useState<CursoAula | null>(null);
-
-  // Estados para Cursos de Faculdade
-  const [selectedSemestre, setSelectedSemestre] = useState<SemestreFaculdade | null>(null);
-  const [selectedModuloFaculdade, setSelectedModuloFaculdade] = useState<ModuloFaculdade | null>(null);
-  const [selectedTema, setSelectedTema] = useState<TemaFaculdade | null>(null);
-  const [selectedAulaFaculdade, setSelectedAulaFaculdade] = useState<AulaFaculdadeCompleta | null>(null);
-  const [showProfessora, setShowProfessora] = useState(false);
-
-  // Hooks para Cursos Iniciando no Direito
-  const {
-    areas,
-    totalAreas,
-    totalModulos,
-    totalAulas,
-    isLoading: isLoadingIniciando,
-    error: errorIniciando
-  } = useCursosOrganizados();
-  const {
-    atualizarProgresso,
-    obterProgresso,
-    calcularProgressoModulo,
-    calcularProgressoArea
-  } = useProgressoUsuario();
-
-  // Hooks para Cursos de Faculdade
-  const {
-    semestres,
-    totalSemestres,
-    totalModulos: totalModulosFaculdade,
-    totalAulas: totalAulasFaculdade,
-    isLoading: isLoadingFaculdade,
-    error: errorFaculdade
-  } = useFaculdadeOrganizada();
-  const {
-    atualizarProgresso: atualizarProgressoFaculdade,
-    obterProgresso: obterProgressoFaculdade,
-    calcularProgressoTema,
-    calcularProgressoModulo: calcularProgressoModuloFaculdade,
-    calcularProgressoSemestre
-  } = useProgressoFaculdade();
-  const isLoading = isLoadingIniciando || isLoadingFaculdade;
-  const error = errorIniciando || errorFaculdade;
-
-  // Preload covers for instant loading
-  useCursosCoversPreloader(areas);
   const handleBack = () => {
-    if (selectedAula) {
-      setSelectedAula(null);
-    } else if (selectedModulo) {
-      setSelectedModulo(null);
-    } else if (selectedArea) {
-      setSelectedArea(null);
-    } else if (selectedAulaFaculdade) {
-      setSelectedAulaFaculdade(null);
-    } else if (selectedTema) {
-      setSelectedTema(null);
-    } else if (selectedModuloFaculdade) {
-      setSelectedModuloFaculdade(null);
-    } else if (selectedSemestre) {
-      setSelectedSemestre(null);
-    } else if (cursoTipo) {
+    if (cursoTipo) {
       setCursoTipo(null);
     } else {
       setCurrentFunction(null);
     }
   };
-  const handleVideoProgress = (currentTime: number, duration: number) => {
-    if (selectedAula) {
-      atualizarProgresso(selectedAula.id, currentTime, duration);
-    } else if (selectedAulaFaculdade) {
-      atualizarProgressoFaculdade(selectedAulaFaculdade.id, currentTime, duration);
-    }
-  };
-  const handleVideoEnd = () => {
-    if (selectedAula && selectedModulo) {
-      // Find next lesson in the current module
-      const currentAulaIndex = selectedModulo.aulas.findIndex(a => a.id === selectedAula.id);
-      const nextAula = selectedModulo.aulas[currentAulaIndex + 1];
-      if (nextAula) {
-        // Go to next lesson
-        setSelectedAula(nextAula);
-      } else {
-        // No more lessons in this module, go back to module view
-        setSelectedAula(null);
-      }
-    } else if (selectedAulaFaculdade && selectedTema) {
-      // Find next lesson in the current theme
-      const currentAulaIndex = selectedTema.aulas.findIndex(a => a.id === selectedAulaFaculdade.id);
-      const nextAula = selectedTema.aulas[currentAulaIndex + 1];
-      if (nextAula) {
-        // Go to next lesson
-        setSelectedAulaFaculdade(nextAula);
-      } else {
-        // No more lessons in this theme, go back to theme view
-        setSelectedAulaFaculdade(null);
-      }
-    }
-  };
-  const handleNearVideoEnd = () => {
-    // Mark current lesson as 100% complete when 3 seconds remaining
-    if (selectedAula) {
-      const durationInSeconds = selectedAula.duracao * 60;
-      atualizarProgresso(selectedAula.id, durationInSeconds, durationInSeconds);
-    } else if (selectedAulaFaculdade) {
-      const durationInSeconds = selectedAulaFaculdade.duracao * 60;
-      atualizarProgressoFaculdade(selectedAulaFaculdade.id, durationInSeconds, durationInSeconds);
-    }
-  };
-  const filteredAreas = areas.filter(area => area.nome.toLowerCase().includes(searchTerm.toLowerCase()) || area.modulos.some(modulo => modulo.nome.toLowerCase().includes(searchTerm.toLowerCase()) || modulo.aulas.some(aula => aula.nome.toLowerCase().includes(searchTerm.toLowerCase()) || aula.tema.toLowerCase().includes(searchTerm.toLowerCase()) || aula.assunto.toLowerCase().includes(searchTerm.toLowerCase()))));
-  const filteredSemestres = semestres.filter(semestre => semestre.nome.toLowerCase().includes(searchTerm.toLowerCase()) || semestre.modulos.some(modulo => modulo.nome.toLowerCase().includes(searchTerm.toLowerCase()) || modulo.temas.some(tema => tema.nome.toLowerCase().includes(searchTerm.toLowerCase()) || tema.aulas.some(aula => aula.nome.toLowerCase().includes(searchTerm.toLowerCase())))));
-  if (isLoading) {
-    return <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/30 h-14">
-          <div className="flex items-center h-full px-4">
-            <Button variant="ghost" size="sm" onClick={handleBack} className="flex items-center gap-2">
-              <ArrowLeft className="h-5 w-5" strokeWidth={3} />
-              Voltar
-            </Button>
-            <h1 className="ml-4 text-lg font-semibold">Cursos Preparatórios</h1>
-          </div>
-        </div>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Carregando cursos...</p>
-          </div>
-        </div>
-      </div>;
+  
+  // Renderizar componente baseado no tipo selecionado
+  if (cursoTipo === 'iniciando') {
+    return <CursoIniciando onBack={handleBack} />;
   }
-  if (error) {
-    return <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/30 h-14">
-          <div className="flex items-center h-full px-4">
-            <Button variant="ghost" size="sm" onClick={handleBack} className="flex items-center gap-2">
-              <ArrowLeft className="h-5 w-5" strokeWidth={3} />
-              Voltar
-            </Button>
-            <h1 className="ml-4 text-lg font-semibold">Cursos Preparatórios</h1>
-          </div>
-        </div>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <p className="text-destructive mb-4">Erro ao carregar cursos</p>
-            <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
-          </div>
-        </div>
-      </div>;
+  
+  if (cursoTipo === 'faculdade') {
+    return <CursoFaculdade onBack={handleBack} />;
   }
-
-  // Tela de seleção inicial - Iniciando no Direito ou Faculdade
-  if (!cursoTipo) {
-    return <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/30 h-14">
-          <div className="flex items-center h-full px-4">
-            <Button variant="ghost" size="sm" onClick={handleBack} className="flex items-center gap-2">
-              <ArrowLeft className="h-5 w-5" strokeWidth={3} />
-              Voltar
-            </Button>
-            <h1 className="ml-4 text-lg font-semibold">Cursos Preparatórios</h1>
-          </div>
-        </div>
-
-        <div className="p-4 max-w-2xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold mb-2">Escolha seu tipo de curso</h2>
-            <p className="text-muted-foreground">
-              Selecione o curso que melhor se adequa ao seu nível e objetivos
-            </p>
-          </div>
-
-          <div className="grid gap-6">
-            {/* Iniciando no Direito */}
-            <div onClick={() => setCursoTipo('iniciando')} className="bg-card rounded-xl p-6 cursor-pointer hover:bg-accent/50 transition-colors border border-border group">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <UserPlus className="w-8 h-8 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold mb-2">Iniciando no Direito</h3>
-                  <p className="text-muted-foreground mb-3">
-                    Ideal para quem está começando a estudar direito agora
-                  </p>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <BookOpen className="w-4 h-4" />
-                      <span>{totalAreas} áreas</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Play className="w-4 h-4" />
-                      <span>{totalAulas} aulas</span>
-                    </div>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-
-            {/* Faculdade */}
-            <div onClick={() => setCursoTipo('faculdade')} className="bg-card rounded-xl p-6 cursor-pointer hover:bg-accent/50 transition-colors border border-border group">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
-                  <GraduationCap className="w-8 h-8 text-secondary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold mb-2">Faculdade</h3>
-                  <p className="text-muted-foreground mb-3">
-                    Todas as matérias que ensinam na faculdade de direito
-                  </p>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <BookOpen className="w-4 h-4" />
-                      <span>{totalSemestres} semestres</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Play className="w-4 h-4" />
-                      <span>{totalAulasFaculdade} aulas</span>
-                    </div>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-
-            {/* Artigo por Artigo */}
-            <div onClick={() => setCurrentFunction('Artigo por Artigo')} className="bg-card rounded-xl p-6 cursor-pointer hover:bg-accent/50 transition-colors border border-border group">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-lg bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
-                  <FileText className="w-8 h-8 text-accent-foreground" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold mb-2">Artigo por Artigo</h3>
-                  <p className="text-muted-foreground mb-3">
-                    Estude cada artigo do Código Civil com vídeos explicativos e análises detalhadas
-                  </p>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <BookOpen className="w-4 h-4" />
-                      <span>Código Civil</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Play className="w-4 h-4" />
-                      <span>Vídeos explicativos</span>
-                    </div>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>;
+  
+  if (cursoTipo === 'artigo') {
+    return <CursoArtigoPorArtigo onBack={handleBack} />;
   }
 
   // Visualização de aula individual para Faculdade
