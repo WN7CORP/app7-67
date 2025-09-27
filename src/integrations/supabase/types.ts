@@ -1015,9 +1015,7 @@ export type Database = {
         Row: {
           Área: string | null
           "Capa-area": string | null
-          "Capa-area-link": string | null
           "Capa-livro": string | null
-          "Capa-livro-link": string | null
           Download: string | null
           id: number
           Link: string | null
@@ -1028,9 +1026,7 @@ export type Database = {
         Insert: {
           Área?: string | null
           "Capa-area"?: string | null
-          "Capa-area-link"?: string | null
           "Capa-livro"?: string | null
-          "Capa-livro-link"?: string | null
           Download?: string | null
           id?: number
           Link?: string | null
@@ -1041,9 +1037,7 @@ export type Database = {
         Update: {
           Área?: string | null
           "Capa-area"?: string | null
-          "Capa-area-link"?: string | null
           "Capa-livro"?: string | null
-          "Capa-livro-link"?: string | null
           Download?: string | null
           id?: number
           Link?: string | null
