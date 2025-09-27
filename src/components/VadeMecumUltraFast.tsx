@@ -317,6 +317,9 @@ export const VadeMecumUltraFast: React.FC = () => {
     const [showExample, setShowExample] = useState(false);
     const [isFavorited, setIsFavorited] = useState(false);
 
+    // Debug logs
+    console.log('Modal states:', { showExplanation, showExample, explanation: explanation.length, practicalExample: practicalExample.length });
+
     const articleText = article.Artigo || '';
     const articleNumber = article["Número do Artigo"] || article.numero || '';
     
@@ -329,6 +332,7 @@ export const VadeMecumUltraFast: React.FC = () => {
     const callGeminiAPI = async (action: 'explicar' | 'exemplo' | 'apresentar') => {
       setLoadingState(action === 'apresentar' ? null : action);
       try {
+        console.log('Chamando Gemini API para:', action);
         const { data, error } = await supabase.functions.invoke('gemini-vademecum', {
           body: {
             action,
@@ -338,14 +342,22 @@ export const VadeMecumUltraFast: React.FC = () => {
           }
         });
 
+        console.log('Resposta da API:', data, 'Erro:', error);
+
         if (error) throw error;
 
         if (action === 'explicar') {
-          setExplanation(data.content || data.response || 'Explicação gerada com sucesso.');
+          const content = data.content || data.response || 'Explicação gerada com sucesso.';
+          console.log('Definindo explicação:', content);
+          setExplanation(content);
           setShowExplanation(true);
+          console.log('Modal de explicação aberto:', true);
         } else if (action === 'exemplo') {
-          setPracticalExample(data.content || data.response || 'Exemplo gerado com sucesso.');
+          const content = data.content || data.response || 'Exemplo gerado com sucesso.';
+          console.log('Definindo exemplo:', content);
+          setPracticalExample(content);
           setShowExample(true);
+          console.log('Modal de exemplo aberto:', true);
         }
 
         toast({
@@ -456,20 +468,7 @@ export const VadeMecumUltraFast: React.FC = () => {
               </div>
             )}
 
-            {/* Quando não há número do artigo válido, mostrar apenas botão de copiar à direita */}
-            {!hasArticleNumber && (
-              <div className="flex justify-end mb-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onCopy}
-                  className="h-8 text-xs border-primary/20 hover:border-primary/40"
-                >
-                  <Copy className="h-3 w-3 mr-1" />
-                  Copiar
-                </Button>
-              </div>
-            )}
+            {/* Quando não há número do artigo válido, não mostrar nenhum botão de copiar */}
             
             {/* Texto do artigo com fonte legível e formatação aprimorada */}
             <div className="vademecum-text text-foreground mb-4 whitespace-pre-wrap">
@@ -510,16 +509,18 @@ export const VadeMecumUltraFast: React.FC = () => {
                   </Button>
                 </>
               )}
-              {/* Botão de ouvir sempre disponível */}
-              <Button
-                onClick={playAudio}
-                variant="ghost"
-                size="sm"
-                className="hover:bg-muted/50"
-              >
-                <Volume2 className="h-4 w-4 mr-2" />
-                Ouvir
-              </Button>
+              {/* Botão de ouvir APENAS para artigos com número válido */}
+              {hasArticleNumber && (
+                <Button
+                  onClick={playAudio}
+                  variant="ghost"
+                  size="sm"
+                  className="hover:bg-muted/50"
+                >
+                  <Volume2 className="h-4 w-4 mr-2" />
+                  Ouvir
+                </Button>
+              )}
             </div>
 
             {/* Explanation Content - APENAS para artigos com número válido */}
@@ -560,7 +561,7 @@ export const VadeMecumUltraFast: React.FC = () => {
 
         {/* Modal de Explicação */}
         <Dialog open={showExplanation} onOpenChange={setShowExplanation}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto z-50">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <BookOpen className="h-5 w-5 text-primary" />
@@ -569,9 +570,13 @@ export const VadeMecumUltraFast: React.FC = () => {
             </DialogHeader>
             <div className="space-y-4">
               <div className="vademecum-text p-4 bg-muted/50 rounded-lg">
-                {explanation.split('\n').map((line, index) => (
-                  <p key={index} className="mb-2 last:mb-0">{line}</p>
-                ))}
+                {explanation ? (
+                  explanation.split('\n').map((line, index) => (
+                    <p key={index} className="mb-2 last:mb-0">{line}</p>
+                  ))
+                ) : (
+                  <p>Carregando explicação...</p>
+                )}
               </div>
               <div className="flex gap-2">
                 <Button
@@ -600,7 +605,7 @@ export const VadeMecumUltraFast: React.FC = () => {
 
         {/* Modal de Exemplo */}
         <Dialog open={showExample} onOpenChange={setShowExample}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto z-50">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Lightbulb className="h-5 w-5 text-warning" />
@@ -609,9 +614,13 @@ export const VadeMecumUltraFast: React.FC = () => {
             </DialogHeader>
             <div className="space-y-4">
               <div className="vademecum-text p-4 bg-muted/50 rounded-lg">
-                {practicalExample.split('\n').map((line, index) => (
-                  <p key={index} className="mb-2 last:mb-0">{line}</p>
-                ))}
+                {practicalExample ? (
+                  practicalExample.split('\n').map((line, index) => (
+                    <p key={index} className="mb-2 last:mb-0">{line}</p>
+                  ))
+                ) : (
+                  <p>Carregando exemplo...</p>
+                )}
               </div>
               <div className="flex gap-2">
                 <Button
