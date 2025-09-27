@@ -29,6 +29,7 @@ import { MapasMentais } from '@/components/MapasMentais';
 import { Anotacoes } from '@/components/Anotacoes';
 import { ListaTarefas } from '@/components/ListaTarefas';
 import { Audioaulas } from '@/components/Audioaulas';
+import { ArtigoPorArtigo } from '@/components/ArtigoPorArtigo';
 
 // Componente de Header otimizado sem re-renders
 const FunctionHeader = memo(({ title, onBack }: { title: string; onBack: () => void }) => (
@@ -92,7 +93,9 @@ const COMPONENT_MAP = {
   'anotações': Anotacoes,
   'anotacoes': Anotacoes,
   'minhas anotações': Anotacoes,
-  'loja': Loja
+  'loja': Loja,
+  'artigo por artigo': ArtigoPorArtigo,
+  'artigos comentados': ArtigoPorArtigo
 } as const;
 
 export const AppFunctionUltraFast = memo(() => {
