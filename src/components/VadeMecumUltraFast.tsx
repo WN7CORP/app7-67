@@ -105,63 +105,63 @@ const VadeMecumUltraFast: React.FC = () => {
     }
   }, []);
 
-  // Códigos otimizados com design system consistente - Cor amarela unificada
+  // Códigos otimizados com design system consistente - Amarelo mais vívido
   const articleCodes = useMemo<VadeMecumLegalCode[]>(() => [
     { 
       id: 'cc', name: 'CC', fullName: 'Código Civil', 
       description: 'Relações civis entre particulares', 
       icon: '🤝', 
-      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
-      textColor: 'text-yellow-600 dark:text-yellow-400'
+      color: 'bg-gradient-to-br from-vademecum-card to-vademecum-bg border border-vademecum-border',
+      textColor: 'text-vademecum-yellow'
     },
     { 
       id: 'cdc', name: 'CDC', fullName: 'Código de Defesa do Consumidor', 
       description: 'Proteção dos direitos do consumidor', 
       icon: '🛡️', 
-      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
-      textColor: 'text-yellow-600 dark:text-yellow-400'
+      color: 'bg-gradient-to-br from-vademecum-card to-vademecum-bg border border-vademecum-border',
+      textColor: 'text-vademecum-yellow'
     },
     { 
       id: 'cf88', name: 'CF/88', fullName: 'Constituição Federal de 1988', 
       description: 'Carta Magna do Brasil', 
       icon: '🏛️', 
-      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
-      textColor: 'text-yellow-600 dark:text-yellow-400'
+      color: 'bg-gradient-to-br from-vademecum-card to-vademecum-bg border border-vademecum-border',
+      textColor: 'text-vademecum-yellow'
     },
     { 
       id: 'cp', name: 'CP', fullName: 'Código Penal', 
       description: 'Crimes e suas penalidades', 
       icon: '⚖️', 
-      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
-      textColor: 'text-yellow-600 dark:text-yellow-400'
+      color: 'bg-gradient-to-br from-vademecum-card to-vademecum-bg border border-vademecum-border',
+      textColor: 'text-vademecum-yellow'
     },
     { 
       id: 'cpc', name: 'CPC', fullName: 'Código de Processo Civil', 
       description: 'Procedimentos judiciais cíveis', 
       icon: '📋', 
-      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
-      textColor: 'text-yellow-600 dark:text-yellow-400'
+      color: 'bg-gradient-to-br from-vademecum-card to-vademecum-bg border border-vademecum-border',
+      textColor: 'text-vademecum-yellow'
     },
     { 
       id: 'cpp', name: 'CPP', fullName: 'Código de Processo Penal', 
       description: 'Procedimentos judiciais criminais', 
       icon: '🔍', 
-      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
-      textColor: 'text-yellow-600 dark:text-yellow-400'
+      color: 'bg-gradient-to-br from-vademecum-card to-vademecum-bg border border-vademecum-border',
+      textColor: 'text-vademecum-yellow'
     },
     { 
       id: 'clt', name: 'CLT', fullName: 'Consolidação das Leis do Trabalho', 
       description: 'Direitos e deveres trabalhistas', 
       icon: '👷', 
-      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
-      textColor: 'text-yellow-600 dark:text-yellow-400'
+      color: 'bg-gradient-to-br from-vademecum-card to-vademecum-bg border border-vademecum-border',
+      textColor: 'text-vademecum-yellow'
     },
     { 
       id: 'ctn', name: 'CTN', fullName: 'Código Tributário Nacional', 
       description: 'Normas gerais de direito tributário', 
       icon: '💰', 
-      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
-      textColor: 'text-yellow-600 dark:text-yellow-400'
+      color: 'bg-gradient-to-br from-vademecum-card to-vademecum-bg border border-vademecum-border',
+      textColor: 'text-vademecum-yellow'
     }
   ], []);
 
@@ -171,15 +171,15 @@ const VadeMecumUltraFast: React.FC = () => {
       id: 'eca', name: 'ECA', fullName: 'Estatuto da Criança e do Adolescente', 
       description: 'Proteção integral à criança e adolescente', 
       icon: '👶', 
-      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
-      textColor: 'text-yellow-600 dark:text-yellow-400'
+      color: 'bg-gradient-to-br from-vademecum-card to-vademecum-bg border border-vademecum-border',
+      textColor: 'text-vademecum-yellow'
     },
     { 
       id: 'estatuto_idoso', name: 'Estatuto do Idoso', fullName: 'Estatuto da Pessoa Idosa', 
       description: 'Direitos das pessoas com idade igual ou superior a 60 anos', 
       icon: '👴', 
-      color: 'bg-gradient-to-br from-yellow-500/20 to-yellow-600/30 border border-yellow-400/50',
-      textColor: 'text-yellow-600 dark:text-yellow-400'
+      color: 'bg-gradient-to-br from-vademecum-card to-vademecum-bg border border-vademecum-border',
+      textColor: 'text-vademecum-yellow'
     }
   ], []);
 
@@ -698,37 +698,44 @@ const VadeMecumUltraFast: React.FC = () => {
           <div className="w-16" />
         </div>
 
-        <div className="p-4">
-          {/* Grid 2x2 para os códigos de leis */}
-          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
-            {currentCodes.map((code) => (
-              <div
-                key={code.id}
-                onClick={() => loadArticles(code)}
-                className="cursor-pointer group"
-              >
-                <div className={`rounded-xl ${code.color} shadow-md hover:shadow-lg transition-all duration-300 p-4 glass-effect-modern`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="text-2xl group-hover:scale-110 transition-transform">{code.icon}</div>
-                      <div>
-                        <h3 className={`font-bold text-lg ${code.textColor}`}>
-                          {code.name}
-                        </h3>
-                        <p className={`text-sm ${code.textColor} opacity-80`}>
-                          {code.fullName}
-                        </p>
-                        <p className={`text-xs ${code.textColor} opacity-60 hidden sm:block`}>
-                          {code.description}
-                        </p>
+        <div className="p-4 bg-vademecum-bg min-h-screen">
+          {/* Grid responsivo para códigos */}
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {currentCodes.map((code) => (
+                <motion.div
+                  key={code.id}
+                  onClick={() => loadArticles(code)}
+                  className="cursor-pointer group"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className={`rounded-xl ${code.color} shadow-lg hover:shadow-xl transition-all duration-300 p-4 h-full min-h-[120px] flex flex-col justify-between hover:border-vademecum-yellow/50`}>
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="text-3xl group-hover:scale-110 transition-transform">
+                        {code.icon}
                       </div>
+                      <ChevronRight className={`h-5 w-5 ${code.textColor} group-hover:translate-x-1 transition-transform opacity-70`} />
                     </div>
                     
-                    <ChevronRight className={`h-5 w-5 ${code.textColor} group-hover:translate-x-1 transition-transform`} />
+                    <div className="flex-1">
+                      <h3 className={`font-bold text-xl mb-1 ${code.textColor} group-hover:text-vademecum-yellow-hover transition-colors`}>
+                        {code.name}
+                      </h3>
+                      <p className={`text-sm ${code.textColor} opacity-90 font-medium mb-2`}>
+                        {code.fullName}
+                      </p>
+                      <p className={`text-xs ${code.textColor} opacity-70 leading-relaxed`}>
+                        {code.description}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

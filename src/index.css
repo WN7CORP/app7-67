@@ -35,7 +35,7 @@
     --popover-foreground: 0 0% 96%;
 
     /* Vibrant Yellow System - Beautiful and Lively */
-    --primary: 48 100% 67%;                /* Vibrant beautiful yellow */
+    --primary: 45 100% 55%;                /* More vivid yellow */
     --primary-foreground: 0 0% 8%;
 
     --secondary: 0 0% 12%;                 /* Subtle dark secondary */
@@ -44,9 +44,17 @@
     --muted: 0 0% 14%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 48 100% 67%;                 /* Vibrant yellow accent */
+    --accent: 45 100% 55%;                 /* Vivid yellow accent */
     --accent-foreground: 0 0% 8%;
-    --accent-legal: 48 100% 67%;
+    --accent-legal: 45 100% 55%;
+
+    /* Vade Mecum specific colors - vivid yellow theme */
+    --vademecum-yellow: 45 100% 55%;
+    --vademecum-yellow-hover: 45 100% 65%;
+    --vademecum-yellow-text: 45 100% 45%;
+    --vademecum-bg: 0 0% 5%;
+    --vademecum-card: 0 0% 8%;
+    --vademecum-border: 0 0% 15%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;

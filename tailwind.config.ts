@@ -96,6 +96,14 @@ export default {
 					primary: 'hsl(var(--tools-primary))',
 					secondary: 'hsl(var(--tools-secondary))',
 					accent: 'hsl(var(--tools-accent))'
+				},
+				'vademecum': {
+					yellow: 'hsl(45 100% 55%)',
+					'yellow-hover': 'hsl(45 100% 65%)',
+					'yellow-text': 'hsl(45 100% 45%)',
+					bg: 'hsl(0 0% 5%)',
+					card: 'hsl(0 0% 8%)',
+					border: 'hsl(0 0% 15%)',
 				}
 			},
 			borderRadius: {
