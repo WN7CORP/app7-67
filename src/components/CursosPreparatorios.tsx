@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Search, Play, BookOpen, Clock, Users, ChevronRight, PlayCircle, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Search, Play, BookOpen, Clock, Users, ChevronRight, PlayCircle, TrendingUp, GraduationCap, UserPlus } from 'lucide-react';
 import { useNavigation } from '@/context/NavigationContext';
 import { useCursosOrganizados, useProgressoUsuario, CursoArea, CursoModulo, CursoAula } from '@/hooks/useCursosPreparatorios';
+import { useFaculdadeOrganizada, useProgressoFaculdade, SemestreFaculdade, ModuloFaculdade, TemaFaculdade, AulaFaculdadeCompleta } from '@/hooks/useCursoFaculdade';
 import { useCursosCoversPreloader } from '@/hooks/useCoverPreloader';
 import { CursosVideoPlayer } from '@/components/CursosVideoPlayer';
 import { Progress } from '@/components/ui/progress';
@@ -13,21 +14,47 @@ import ProfessoraIA from './ProfessoraIA';
 import { ProfessoraIAFloatingButton } from './ProfessoraIAFloatingButton';
 import { LessonActionButtons } from './Cursos/LessonActionButtons';
 
+type CursoTipo = 'iniciando' | 'faculdade' | null;
+
 export const CursosPreparatorios = () => {
   const { setCurrentFunction } = useNavigation();
+  const [cursoTipo, setCursoTipo] = useState<CursoTipo>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Estados para Cursos Iniciando no Direito
   const [selectedArea, setSelectedArea] = useState<CursoArea | null>(null);
   const [selectedModulo, setSelectedModulo] = useState<CursoModulo | null>(null);
   const [selectedAula, setSelectedAula] = useState<CursoAula | null>(null);
+  
+  // Estados para Cursos de Faculdade
+  const [selectedSemestre, setSelectedSemestre] = useState<SemestreFaculdade | null>(null);
+  const [selectedModuloFaculdade, setSelectedModuloFaculdade] = useState<ModuloFaculdade | null>(null);
+  const [selectedTema, setSelectedTema] = useState<TemaFaculdade | null>(null);
+  const [selectedAulaFaculdade, setSelectedAulaFaculdade] = useState<AulaFaculdadeCompleta | null>(null);
+  
   const [showProfessora, setShowProfessora] = useState(false);
   
-  const { areas, totalAreas, totalModulos, totalAulas, isLoading, error } = useCursosOrganizados();
+  // Hooks para Cursos Iniciando no Direito
+  const { areas, totalAreas, totalModulos, totalAulas, isLoading: isLoadingIniciando, error: errorIniciando } = useCursosOrganizados();
   const { 
     atualizarProgresso, 
     obterProgresso, 
     calcularProgressoModulo, 
     calcularProgressoArea 
   } = useProgressoUsuario();
+  
+  // Hooks para Cursos de Faculdade
+  const { semestres, totalSemestres, totalModulos: totalModulosFaculdade, totalAulas: totalAulasFaculdade, isLoading: isLoadingFaculdade, error: errorFaculdade } = useFaculdadeOrganizada();
+  const { 
+    atualizarProgresso: atualizarProgressoFaculdade, 
+    obterProgresso: obterProgressoFaculdade, 
+    calcularProgressoTema, 
+    calcularProgressoModulo: calcularProgressoModuloFaculdade, 
+    calcularProgressoSemestre 
+  } = useProgressoFaculdade();
+  
+  const isLoading = isLoadingIniciando || isLoadingFaculdade;
+  const error = errorIniciando || errorFaculdade;
   
   // Preload covers for instant loading
   useCursosCoversPreloader(areas);
@@ -39,6 +66,16 @@ export const CursosPreparatorios = () => {
       setSelectedModulo(null);
     } else if (selectedArea) {
       setSelectedArea(null);
+    } else if (selectedAulaFaculdade) {
+      setSelectedAulaFaculdade(null);
+    } else if (selectedTema) {
+      setSelectedTema(null);
+    } else if (selectedModuloFaculdade) {
+      setSelectedModuloFaculdade(null);
+    } else if (selectedSemestre) {
+      setSelectedSemestre(null);
+    } else if (cursoTipo) {
+      setCursoTipo(null);
     } else {
       setCurrentFunction(null);
     }
@@ -47,22 +84,36 @@ export const CursosPreparatorios = () => {
   const handleVideoProgress = (currentTime: number, duration: number) => {
     if (selectedAula) {
       atualizarProgresso(selectedAula.id, currentTime, duration);
+    } else if (selectedAulaFaculdade) {
+      atualizarProgressoFaculdade(selectedAulaFaculdade.id, currentTime, duration);
     }
   };
 
   const handleVideoEnd = () => {
-    if (!selectedAula || !selectedModulo) return;
-    
-    // Find next lesson in the current module
-    const currentAulaIndex = selectedModulo.aulas.findIndex(a => a.id === selectedAula.id);
-    const nextAula = selectedModulo.aulas[currentAulaIndex + 1];
-    
-    if (nextAula) {
-      // Go to next lesson
-      setSelectedAula(nextAula);
-    } else {
-      // No more lessons in this module, go back to module view
-      setSelectedAula(null);
+    if (selectedAula && selectedModulo) {
+      // Find next lesson in the current module
+      const currentAulaIndex = selectedModulo.aulas.findIndex(a => a.id === selectedAula.id);
+      const nextAula = selectedModulo.aulas[currentAulaIndex + 1];
+      
+      if (nextAula) {
+        // Go to next lesson
+        setSelectedAula(nextAula);
+      } else {
+        // No more lessons in this module, go back to module view
+        setSelectedAula(null);
+      }
+    } else if (selectedAulaFaculdade && selectedTema) {
+      // Find next lesson in the current theme
+      const currentAulaIndex = selectedTema.aulas.findIndex(a => a.id === selectedAulaFaculdade.id);
+      const nextAula = selectedTema.aulas[currentAulaIndex + 1];
+      
+      if (nextAula) {
+        // Go to next lesson
+        setSelectedAulaFaculdade(nextAula);
+      } else {
+        // No more lessons in this theme, go back to theme view
+        setSelectedAulaFaculdade(null);
+      }
     }
   };
 
@@ -71,6 +122,9 @@ export const CursosPreparatorios = () => {
     if (selectedAula) {
       const durationInSeconds = selectedAula.duracao * 60;
       atualizarProgresso(selectedAula.id, durationInSeconds, durationInSeconds);
+    } else if (selectedAulaFaculdade) {
+      const durationInSeconds = selectedAulaFaculdade.duracao * 60;
+      atualizarProgressoFaculdade(selectedAulaFaculdade.id, durationInSeconds, durationInSeconds);
     }
   };
 
@@ -82,6 +136,19 @@ export const CursosPreparatorios = () => {
         aula.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
         aula.tema.toLowerCase().includes(searchTerm.toLowerCase()) ||
         aula.assunto.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    )
+  );
+
+  const filteredSemestres = semestres.filter(semestre =>
+    semestre.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    semestre.modulos.some(modulo =>
+      modulo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      modulo.temas.some(tema =>
+        tema.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        tema.aulas.some(aula =>
+          aula.nome.toLowerCase().includes(searchTerm.toLowerCase())
+        )
       )
     )
   );
@@ -130,7 +197,233 @@ export const CursosPreparatorios = () => {
     );
   }
 
-  // Visualização de aula individual com player de vídeo
+  // Tela de seleção inicial - Iniciando no Direito ou Faculdade
+  if (!cursoTipo) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/30 h-14">
+          <div className="flex items-center h-full px-4">
+            <Button variant="ghost" size="sm" onClick={handleBack} className="flex items-center gap-2">
+              <ArrowLeft className="h-5 w-5" strokeWidth={3} />
+              Voltar
+            </Button>
+            <h1 className="ml-4 text-lg font-semibold">Cursos Preparatórios</h1>
+          </div>
+        </div>
+
+        <div className="p-4 max-w-2xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold mb-2">Escolha seu tipo de curso</h2>
+            <p className="text-muted-foreground">
+              Selecione o curso que melhor se adequa ao seu nível e objetivos
+            </p>
+          </div>
+
+          <div className="grid gap-6">
+            {/* Iniciando no Direito */}
+            <div
+              onClick={() => setCursoTipo('iniciando')}
+              className="bg-card rounded-xl p-6 cursor-pointer hover:bg-accent/50 transition-colors border border-border group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <UserPlus className="w-8 h-8 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold mb-2">Iniciando no Direito</h3>
+                  <p className="text-muted-foreground mb-3">
+                    Ideal para quem está começando a estudar direito agora
+                  </p>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <BookOpen className="w-4 h-4" />
+                      <span>{totalAreas} áreas</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Play className="w-4 h-4" />
+                      <span>{totalAulas} aulas</span>
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+
+            {/* Faculdade */}
+            <div
+              onClick={() => setCursoTipo('faculdade')}
+              className="bg-card rounded-xl p-6 cursor-pointer hover:bg-accent/50 transition-colors border border-border group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-lg bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
+                  <GraduationCap className="w-8 h-8 text-secondary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold mb-2">Faculdade</h3>
+                  <p className="text-muted-foreground mb-3">
+                    Todas as matérias que ensinam na faculdade de direito
+                  </p>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <BookOpen className="w-4 h-4" />
+                      <span>{totalSemestres} semestres</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Play className="w-4 h-4" />
+                      <span>{totalAulasFaculdade} aulas</span>
+                    </div>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Visualização de aula individual para Faculdade
+  if (selectedAulaFaculdade) {
+    const progresso = obterProgressoFaculdade(selectedAulaFaculdade.id);
+    
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/30 h-14">
+          <div className="flex items-center h-full px-4">
+            <Button variant="ghost" size="sm" onClick={handleBack} className="flex items-center gap-2">
+              <ArrowLeft className="h-5 w-5" strokeWidth={3} />
+              Voltar
+            </Button>
+            <div className="ml-4 flex-1">
+              <Badge variant="outline" className="mr-2">
+                {selectedAulaFaculdade.semestre}º Semestre - {selectedAulaFaculdade.modulo}
+              </Badge>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 max-w-4xl mx-auto">
+          {/* Player de Vídeo */}
+          <div className="mb-6">
+            <CursosVideoPlayer
+              videoUrl={selectedAulaFaculdade.video}
+              title={selectedAulaFaculdade.nome}
+              subtitle={`${selectedAulaFaculdade.semestre}º Semestre • ${selectedAulaFaculdade.tema}`}
+              onProgress={handleVideoProgress}
+              initialTime={progresso?.tempoAssistido || 0}
+              onEnded={handleVideoEnd}
+              onNearEnd={handleNearVideoEnd}
+              autoPlay={true}
+              lesson={{
+                id: selectedAulaFaculdade.id,
+                area: selectedAulaFaculdade.semestre + 'º Semestre',
+                tema: selectedAulaFaculdade.tema,
+                assunto: selectedAulaFaculdade.nome,
+                conteudo: selectedAulaFaculdade.conteudo
+              }}
+            />
+          </div>
+
+          {/* Informações da Aula */}
+          <div className="bg-card rounded-lg p-6 mb-6">
+            <h1 className="text-2xl font-bold mb-2">{selectedAulaFaculdade.nome}</h1>
+            <p className="text-lg text-muted-foreground mb-4">{selectedAulaFaculdade.tema}</p>
+            
+            <div className="flex items-center gap-6 mb-4">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">{selectedAulaFaculdade.duracao}min</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Play className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">{progresso?.percentualAssistido || 0}% assistido</span>
+              </div>
+            </div>
+
+            {progresso && (
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium">Progresso da aula</span>
+                  <span className="text-sm text-muted-foreground">{progresso.percentualAssistido}%</span>
+                </div>
+                <Progress value={progresso.percentualAssistido} className="h-2" />
+              </div>
+            )}
+          </div>
+
+          {/* Conteúdo da Aula */}
+          {selectedAulaFaculdade.conteudo && (
+            <div className="bg-card rounded-lg p-6 mb-6">
+              <h2 className="text-xl font-semibold mb-4">Conteúdo da Aula</h2>
+              <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-muted-foreground prose-p:leading-relaxed prose-strong:text-yellow-500 prose-strong:font-bold prose-li:text-muted-foreground prose-ul:space-y-2 prose-ol:space-y-2">
+                <ReactMarkdown 
+                  components={{
+                    strong: ({ children }) => (
+                      <strong className="text-yellow-500 font-bold">{children}</strong>
+                    ),
+                    p: ({ children }) => (
+                      <p className="mb-4 leading-relaxed">{children}</p>
+                    ),
+                    ul: ({ children }) => (
+                      <ul className="space-y-2 ml-4">{children}</ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className="space-y-2 ml-4">{children}</ol>
+                    ),
+                    li: ({ children }) => (
+                      <li className="leading-relaxed">{children}</li>
+                    ),
+                    h1: ({ children }) => (
+                      <h1 className="text-2xl font-bold mb-4 mt-6">{children}</h1>
+                    ),
+                    h2: ({ children }) => (
+                      <h2 className="text-xl font-bold mb-3 mt-5">{children}</h2>
+                    ),
+                    h3: ({ children }) => (
+                      <h3 className="text-lg font-bold mb-2 mt-4">{children}</h3>
+                    ),
+                  }}
+                >
+                  {selectedAulaFaculdade.conteudo}
+                </ReactMarkdown>
+              </div>
+            </div>
+          )}
+
+          {/* Material para Download */}
+          {selectedAulaFaculdade.material && (
+            <div className="bg-card rounded-lg p-6 mb-6">
+              <h2 className="text-xl font-semibold mb-4">Material de Apoio</h2>
+              <Button variant="outline" className="w-full">
+                <BookOpen className="h-4 w-4 mr-2" />
+                Baixar Material
+              </Button>
+            </div>
+          )}
+
+        </div>
+        
+        {/* Botão Flutuante da Professora IA */}
+        <ProfessoraIAFloatingButton 
+          onOpen={() => setShowProfessora(true)}
+        />
+        
+        {/* Modal da Professora IA */}
+        <ProfessoraIA
+          video={{
+            title: selectedAulaFaculdade.nome,
+            area: selectedAulaFaculdade.semestre + 'º Semestre',
+            channelTitle: 'Faculdade de Direito'
+          }}
+          isOpen={showProfessora}
+          onClose={() => setShowProfessora(false)}
+        />
+      </div>
+    );
+  }
+
+  // Visualização de aula individual para Iniciando no Direito
   if (selectedAula) {
     const progresso = obterProgresso(selectedAula.id);
     
