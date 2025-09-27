@@ -26,9 +26,9 @@ export const FooterMenu = ({
   };
   const menuItems = [{
     id: 'blog',
-    title: 'Desktop',
+    title: 'JusBlog',
     icon: Monitor,
-    function: 'Plataforma Desktop',
+    function: 'Blog Jurídico',
     color: 'primary'
   }, {
     id: 'vademecum',
@@ -43,10 +43,10 @@ export const FooterMenu = ({
     function: 'Assistente IA Jurídica',
     color: 'special-ai'
   }, {
-    id: 'biblioteca',
-    title: 'Biblioteca',
+    id: 'explorar',
+    title: 'Explorar',
     icon: BookOpen,
-    function: 'Biblioteca Clássicos',
+    function: 'Explorar',
     color: 'library'
   }, {
     id: 'juriflix',

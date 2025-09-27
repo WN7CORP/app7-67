@@ -103,13 +103,13 @@ const CategoryAccessSection = memo(() => {
               title="Animação de Justiça" 
             />
             
-            {/* Botão JusBlog - Lado Direito */}
+            {/* Botão Desktop - Lado Direito */}
             <button 
-              onClick={() => handleFunctionSelect('JusBlog')}
+              onClick={() => handleFunctionSelect('Plataforma Desktop')}
               className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 group flex flex-col items-center"
             >
               <Newspaper className="w-6 h-6 group-hover:scale-110 transition-transform duration-300 mb-1" />
-              <span className="text-xs font-medium">JusBlog</span>
+              <span className="text-xs font-medium">Desktop</span>
             </button>
           </div>
         </div>

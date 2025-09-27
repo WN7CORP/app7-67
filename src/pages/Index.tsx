@@ -19,6 +19,7 @@ import { CategoryAccessSection } from '@/components/CategoryAccessSection';
 import { SocialMediaFooter } from '@/components/SocialMediaFooter';
 import { AppFunction } from '@/components/AppFunctionOptimized';
 import { optimizeAppLoading } from '@/utils/bundleOptimization';
+import { ExplorarCarousel } from '@/components/ExplorarCarousel';
 
 // Loading fallback component
 const LoadingComponent = memo(() => <div className="w-full h-32 flex items-center justify-center">
@@ -28,7 +29,8 @@ LoadingComponent.displayName = 'LoadingComponent';
 
 const Index = memo(() => {
   const {
-    isInFunction
+    isInFunction,
+    isExplorarOpen
   } = useNavigation();
   const {
     isMobile,
@@ -97,23 +99,30 @@ const Index = memo(() => {
 
   // Return appropriate layout based on device
   const layoutContent = (
-    <>
-      {isMobile ? (
-        <MobileLayout>{mainContent}</MobileLayout>
-      ) : isTablet ? (
-        <TabletLayout>{mainContent}</TabletLayout>
-      ) : (
-        <DesktopLayout>{mainContent}</DesktopLayout>
-      )}
+    <div className="relative overflow-hidden min-h-screen">
+      {/* Main Content with slide transition */}
+      <div className={`
+        transition-transform duration-500 ease-in-out
+        ${isExplorarOpen ? '-translate-x-full opacity-20' : 'translate-x-0 opacity-100'}
+      `}>
+        {isMobile ? (
+          <MobileLayout>{mainContent}</MobileLayout>
+        ) : isTablet ? (
+          <TabletLayout>{mainContent}</TabletLayout>
+        ) : (
+          <DesktopLayout>{mainContent}</DesktopLayout>
+        )}
+        
+        {/* Notificação de atualizações de notícias */}
+        <NewsUpdateNotification />
+        
+        {/* Toast notifications */}
+        <Toaster />
+      </div>
       
-      {/* Notificação de atualizações de notícias */}
-      <NewsUpdateNotification />
-      
-      {/* Floating Buttons - Removed from here, now controlled by CategoryDialog */}
-      
-      {/* Toast notifications */}
-      <Toaster />
-    </>
+      {/* Explorar Carousel Overlay */}
+      {isExplorarOpen && <ExplorarCarousel />}
+    </div>
   );
 
   return layoutContent;
