@@ -37,7 +37,7 @@ export const StandardBibliotecaLista = ({
   onBookClick
 }: StandardBibliotecaListaProps) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'titulo' | 'autor'>('titulo');
+  const [sortBy, setSortBy] = useState<'estudos' | 'alfabetica'>('estudos');
   const [previewBook, setPreviewBook] = useState<StandardLivro | null>(null);
 
   // Filtrar e ordenar livros
@@ -57,10 +57,12 @@ export const StandardBibliotecaLista = ({
 
     // Ordenar
     filtered.sort((a, b) => {
-      if (sortBy === 'titulo') {
-        return getTitulo(a).localeCompare(getTitulo(b));
+      if (sortBy === 'estudos') {
+        // Ordenar por ID (ordem de estudos/sequência)
+        return a.id - b.id;
       } else {
-        return (a.autor || '').localeCompare(b.autor || '');
+        // Ordenar alfabeticamente por título
+        return getTitulo(a).localeCompare(getTitulo(b));
       }
     });
     return filtered;
@@ -134,11 +136,11 @@ export const StandardBibliotecaLista = ({
             <Filter className="h-4 w-4 text-muted-foreground" />
             <select 
               value={sortBy} 
-              onChange={(e) => setSortBy(e.target.value as 'titulo' | 'autor')} 
+              onChange={(e) => setSortBy(e.target.value as 'estudos' | 'alfabetica')} 
               className="bg-background border border-border rounded px-3 py-2 text-sm flex-1 sm:flex-none"
             >
-              <option value="titulo">Ordenar por Título</option>
-              <option value="autor">Ordenar por Autor</option>
+              <option value="estudos">Ordem de estudos</option>
+              <option value="alfabetica">Ordem alfabética</option>
             </select>
           </div>
         </div>

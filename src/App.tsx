@@ -10,6 +10,7 @@ import { AudioProgressProvider } from "@/context/AudioProgressContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ResetPasswordScreen } from "@/components/auth/ResetPasswordScreen";
 import { AudioPlayerBar } from "@/components/AudioPlayerBar";
+import { ProfessoraIAGlobal } from "@/components/ProfessoraIAGlobal";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -32,6 +33,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <AudioPlayerBar />
+              <ProfessoraIAGlobal />
             </NavigationProvider>
           </AudioProgressProvider>
         </AudioPlayerProvider>
