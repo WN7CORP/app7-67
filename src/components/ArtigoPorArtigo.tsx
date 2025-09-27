@@ -30,14 +30,9 @@ export const ArtigoPorArtigo = () => {
   const { data: rawData, isLoading } = useOptimizedQuery<any[]>({
     queryKey: ['curso-artigos-leis'],
     queryFn: async () => {
-      const response = await fetch('/api/artigos-leis').catch(() => null);
-      if (!response) {
-        // Usar SQL direto
-        const { data, error } = await supabase.from('CURSO-ARTIGOS-LEIS' as any).select('*');
-        if (error) throw error;
-        return data || [];
-      }
-      return response.json();
+      const { data, error } = await supabase.rpc('fetch_artigos_leis');
+      if (error) throw error;
+      return data || [];
     },
     staleTime: 10 * 60 * 1000,
     useExternalCache: true,
@@ -49,11 +44,11 @@ export const ArtigoPorArtigo = () => {
       id: item.id,
       area: item.area || '',
       artigo: item.artigo || '',
-      'link-artigo': item['link-artigo'] || '',
-      'texto artigo': item['texto artigo'] || '',
+      'link-artigo': item.link_artigo || '',
+      'texto artigo': item.texto_artigo || '',
       analise: item.analise || '',
-      'capa-artigo': item['capa-artigo'] || '',
-      'capa-area': item['capa-area'] || '',
+      'capa-artigo': item.capa_artigo || '',
+      'capa-area': item.capa_area || '',
     })) as ArtigoData[];
   }, [rawData]);
 

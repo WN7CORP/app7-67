@@ -2045,6 +2045,39 @@ export type Database = {
         }
         Relationships: []
       }
+      "CURSO-ARTIGOS-LEIS": {
+        Row: {
+          analise: string | null
+          area: string | null
+          artigo: string | null
+          "capa-area": string | null
+          "capa-artigo": string | null
+          id: number
+          "link-artigo": string | null
+          "texto artigo": string | null
+        }
+        Insert: {
+          analise?: string | null
+          area?: string | null
+          artigo?: string | null
+          "capa-area"?: string | null
+          "capa-artigo"?: string | null
+          id?: number
+          "link-artigo"?: string | null
+          "texto artigo"?: string | null
+        }
+        Update: {
+          analise?: string | null
+          area?: string | null
+          artigo?: string | null
+          "capa-area"?: string | null
+          "capa-artigo"?: string | null
+          id?: number
+          "link-artigo"?: string | null
+          "texto artigo"?: string | null
+        }
+        Relationships: []
+      }
       "CURSO-ARTIGOS-VIDEO": {
         Row: {
           area: string | null
@@ -2072,6 +2105,54 @@ export type Database = {
           id?: number
           "link-artigo"?: string | null
           "texto artigo"?: string | null
+        }
+        Relationships: []
+      }
+      "CURSO-FACULDADE": {
+        Row: {
+          Assunto: string | null
+          "capa-assunto": string | null
+          "capa-modulo": string | null
+          "capa-semestre": string | null
+          "capa-tema": string | null
+          conteudo: string | null
+          id: number
+          material: string | null
+          modulo: string | null
+          "numero-aula": string | null
+          semestre: string | null
+          Tema: string | null
+          video: string | null
+        }
+        Insert: {
+          Assunto?: string | null
+          "capa-assunto"?: string | null
+          "capa-modulo"?: string | null
+          "capa-semestre"?: string | null
+          "capa-tema"?: string | null
+          conteudo?: string | null
+          id?: number
+          material?: string | null
+          modulo?: string | null
+          "numero-aula"?: string | null
+          semestre?: string | null
+          Tema?: string | null
+          video?: string | null
+        }
+        Update: {
+          Assunto?: string | null
+          "capa-assunto"?: string | null
+          "capa-modulo"?: string | null
+          "capa-semestre"?: string | null
+          "capa-tema"?: string | null
+          conteudo?: string | null
+          id?: number
+          material?: string | null
+          modulo?: string | null
+          "numero-aula"?: string | null
+          semestre?: string | null
+          Tema?: string | null
+          video?: string | null
         }
         Relationships: []
       }
@@ -6458,6 +6539,19 @@ export type Database = {
           pdf_url: string
           publication_date: string | null
           title: string
+        }[]
+      }
+      fetch_artigos_leis: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          analise: string
+          area: string
+          artigo: string
+          capa_area: string
+          capa_artigo: string
+          id: number
+          link_artigo: string
+          texto_artigo: string
         }[]
       }
       fetch_legal_document_by_id: {
