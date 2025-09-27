@@ -188,7 +188,7 @@ const VadeMecumUltraFast: React.FC = () => {
   }, [categoryType, articleCodes, statuteCodes]);
 
   // Função para validar se tem número de artigo válido
-  const isValidArticleNumber = useCallback((articleNumber: string) => {
+  const isValidArticleNumber = useCallback((articleNumber: string, articleContent?: string) => {
     // Verifica se tem número e não é apenas texto de seção/capítulo
     if (!articleNumber) return false;
     
@@ -203,17 +203,28 @@ const VadeMecumUltraFast: React.FC = () => {
     const sectionWords = ['capítulo', 'capitulo', 'seção', 'secao', 'título', 'titulo', 'livro', 'parte'];
     if (sectionWords.some(word => lowerText.includes(word))) return false;
     
+    // Verifica se o conteúdo do artigo realmente começa com "Art." ou "Artigo"
+    if (articleContent) {
+      const contentLower = articleContent.toLowerCase().trim();
+      const startsWithArticle = contentLower.startsWith('art.') || 
+                               contentLower.startsWith('artigo') ||
+                               /^art\.?\s*\d+/.test(contentLower);
+      
+      // Se não começa com "artigo" ou "art.", não deve mostrar número
+      if (!startsWithArticle) return false;
+    }
+    
     return true;
   }, []);
 
   // Callback para quando conteúdo é gerado
-  const handleContentGenerated = useCallback((content: string, type: 'explicar' | 'exemplo', articleNumber: string) => {
+  const handleContentGenerated = useCallback((content: string, type: 'explicar' | 'exemplo', articleNumber: string, articleContent?: string) => {
     setGeneratedModal({
       open: true,
       type,
       content,
       articleNumber,
-      hasValidNumber: isValidArticleNumber(articleNumber)
+      hasValidNumber: isValidArticleNumber(articleNumber, articleContent)
     });
   }, [isValidArticleNumber]);
 
@@ -380,7 +391,7 @@ const VadeMecumUltraFast: React.FC = () => {
     const articleContent = article["Artigo"] || article.conteudo || '';
     
     // Verifica se tem número válido (contém dígitos após remover caracteres não numéricos)
-    const hasValidNumber = isValidArticleNumber(articleNumber);
+    const hasValidNumber = isValidArticleNumber(articleNumber, articleContent);
 
     // Layout compacto para cards sem número válido (seções, capítulos, etc.)
     if (!hasValidNumber) {
