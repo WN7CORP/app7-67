@@ -97,12 +97,6 @@ export const CursosVideoPlayer = ({
       }
     };
 
-    const handleLoadedData = () => {
-      if (initialTime > 0) {
-        video.currentTime = initialTime;
-      }
-    };
-
     const handleLoadedMetadata = () => {
       if (initialTime > 0) {
         video.currentTime = initialTime;
@@ -111,56 +105,67 @@ export const CursosVideoPlayer = ({
       video.muted = false;
     };
 
+    const handleCanPlay = () => {
+      if (initialTime > 0) {
+        video.currentTime = initialTime;
+      }
+    };
+
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('durationchange', handleDurationChange);
     video.addEventListener('ended', handleEnded);
-    video.addEventListener('loadeddata', handleLoadedData);
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('canplay', handleCanPlay);
 
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('durationchange', handleDurationChange);
       video.removeEventListener('ended', handleEnded);
-      video.removeEventListener('loadeddata', handleLoadedData);
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('canplay', handleCanPlay);
     };
   }, [initialTime, onProgress, onEnded, onNearEnd, nearEndTriggered, showNextLessonAlert]);
 
-  // Separate autoplay logic to avoid infinite loops
+  // Separate autoplay logic
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !autoPlay) return;
 
+    let timeoutId: NodeJS.Timeout;
+    
     const attemptAutoplay = async () => {
       try {
-        await video.play();
-        setIsPlaying(true);
+        if (video.readyState >= 3) { // HAVE_FUTURE_DATA
+          await video.play();
+          setIsPlaying(true);
+        }
       } catch (error) {
         console.warn('Autoplay blocked by browser:', error);
         setIsPlaying(false);
       }
     };
 
-    // Only attempt autoplay after video can play
-    const handleCanPlay = () => {
-      if (initialTime > 0) {
-        video.currentTime = initialTime;
-      }
-      attemptAutoplay();
+    const handleCanPlayThrough = () => {
+      // Use timeout to avoid conflicts with other event handlers
+      timeoutId = setTimeout(attemptAutoplay, 100);
     };
 
-    video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener('canplaythrough', handleCanPlayThrough);
     
     return () => {
-      video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('canplaythrough', handleCanPlayThrough);
+      if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [videoUrl, autoPlay, initialTime]);
+  }, [videoUrl, autoPlay]);
 
-  // Reset near end trigger when video changes
+  // Reset states when video changes
   useEffect(() => {
     setNearEndTriggered(false);
     setShowNextLessonAlert(false);
     setAutoAdvanceCountdown(5);
+    setCurrentTime(0);
+    setDuration(0);
+    setIsPlaying(false);
   }, [videoUrl]);
 
   const togglePlay = async () => {
@@ -279,18 +284,20 @@ export const CursosVideoPlayer = ({
         controls={false}
       />
 
-      {/* Video Overlay with Title */}
-      <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/70 to-transparent p-4">
+      {/* Video Overlay with Title - Hidden when playing */}
+      <div className={`absolute top-0 left-0 right-0 bg-gradient-to-b from-black/70 to-transparent p-4 transition-opacity duration-300 ${
+        !isPlaying ? 'opacity-100' : 'opacity-0'
+      }`}>
         <h3 className="text-white font-semibold text-lg">{title}</h3>
         {subtitle && (
           <p className="text-white/80 text-sm">{subtitle}</p>
         )}
       </div>
 
-      {/* Controls Overlay */}
+      {/* Controls Overlay - Hidden when playing */}
       <div 
         className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity duration-300 ${
-          showControls ? 'opacity-100' : 'opacity-0'
+          showControls && !isPlaying ? 'opacity-100' : 'opacity-0'
         }`}
       >
         {/* Progress Bar */}
