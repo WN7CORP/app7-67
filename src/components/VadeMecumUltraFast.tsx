@@ -336,10 +336,10 @@ export const VadeMecumUltraFast: React.FC = () => {
         if (error) throw error;
 
         if (action === 'explicar') {
-          setExplanation(data.response);
+          setExplanation(data.content || data.response || 'Explicação gerada com sucesso.');
           setShowExplanation(true);
         } else if (action === 'exemplo') {
-          setPracticalExample(data.response);
+          setPracticalExample(data.content || data.response || 'Exemplo gerado com sucesso.');
           setShowExample(true);
         }
 
@@ -348,6 +348,7 @@ export const VadeMecumUltraFast: React.FC = () => {
           description: `${action === 'explicar' ? 'Explicação' : 'Exemplo prático'} gerada com IA`,
         });
       } catch (error) {
+        console.error('Erro na API Gemini:', error);
         toast({
           title: "Erro",
           description: "Não foi possível gerar o conteúdo. Tente novamente.",
@@ -465,8 +466,8 @@ export const VadeMecumUltraFast: React.FC = () => {
               </div>
             )}
             
-            {/* Texto do artigo preservando formatação original */}
-            <div className="text-sm leading-relaxed text-foreground mb-4 whitespace-pre-wrap font-mono">
+            {/* Texto do artigo com fonte legível e formatação aprimorada */}
+            <div className="vademecum-text text-foreground mb-4 whitespace-pre-wrap">
               {articleText}
             </div>
 
@@ -481,8 +482,12 @@ export const VadeMecumUltraFast: React.FC = () => {
                     className="bg-gradient-to-r from-primary to-accent-legal hover:from-primary/90 hover:to-accent-legal/90 text-primary-foreground border-none"
                     size="sm"
                   >
-                    <BookOpen className="h-4 w-4 mr-2" />
-                    Explicar
+                    {isLoading ? (
+                      <div className="animate-spin h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full mr-2" />
+                    ) : (
+                      <BookOpen className="h-4 w-4 mr-2" />
+                    )}
+                    {isLoading ? 'Gerando explicação...' : 'Explicar'}
                   </Button>
                   <Button
                     onClick={() => callGeminiAPI('exemplo')}
@@ -491,8 +496,12 @@ export const VadeMecumUltraFast: React.FC = () => {
                     size="sm"
                     className="border-primary/30 hover:border-primary/50 hover:bg-primary/10"
                   >
-                    <Lightbulb className="h-4 w-4 mr-2" />
-                    Exemplo
+                    {isLoading ? (
+                      <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mr-2" />
+                    ) : (
+                      <Lightbulb className="h-4 w-4 mr-2" />
+                    )}
+                    {isLoading ? 'Gerando exemplo...' : 'Exemplo'}
                   </Button>
                 </>
               )}

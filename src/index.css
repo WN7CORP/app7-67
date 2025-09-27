@@ -67,6 +67,9 @@
     --sidebar-border: 0 0% 15%;
     --sidebar-ring: 45 85% 55%;
 
+    /* Reading fonts for Vade Mecum */
+    --vademecum-font: 'Georgia', 'Times New Roman', serif;
+
     /* Enhanced Premium Color Palette */
     --background-deep: 0 0% 0%;            /* Pure black for maximum depth */
     --success: 142 69% 45%;                /* Refined green */
@@ -851,6 +854,20 @@
     0 0 0 2px hsl(var(--red-professional) / 0.3),
     0 4px 12px hsl(var(--red-professional) / 0.4);
   animation: notification-glow 2s ease-in-out infinite;
+}
+
+/* Vade Mecum readable font styles */
+.vademecum-text {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  line-height: 1.7;
+  letter-spacing: 0.015em;
+  font-size: 0.9rem;
+}
+
+@media (min-width: 768px) {
+  .vademecum-text {
+    font-size: 1rem;
+  }
 }
 
 /* Enhanced Animation Classes */
