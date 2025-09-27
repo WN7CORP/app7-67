@@ -21,7 +21,7 @@ export interface AulaFaculdade {
   modulo: string;
   tema: string;
   'numero-aula': string;
-  assunto: string;
+  Assunto: string;
   video: string;
   conteudo: string;
   material: string;
@@ -82,26 +82,17 @@ export const useCursoFaculdade = () => {
   return useOptimizedQuery({
     queryKey: ['curso-faculdade'],
     queryFn: async () => {
-      // Mock data para agora - vamos implementar a query real depois
-      const mockData: AulaFaculdade[] = [
-        {
-          id: 1,
-          semestre: '1',
-          modulo: 'Direito Constitucional',
-          tema: 'Princípios Fundamentais',
-          'numero-aula': '1',
-          assunto: 'Introdução ao Direito Constitucional',
-          video: 'https://example.com/video1.mp4',
-          conteudo: 'Conteúdo introdutório sobre direito constitucional...',
-          material: 'https://example.com/material1.pdf',
-          'capa-semestre': '/placeholder.svg',
-          'capa-modulo': '/placeholder.svg',
-          'capa-tema': '/placeholder.svg',
-          'capa-assunto': '/placeholder.svg',
-        }
-      ];
+      const { data, error } = await supabase
+        .from('CURSO-FACULDADE' as any)
+        .select('*')
+        .order('numero-aula');
       
-      return mockData;
+      if (error) {
+        console.error('Erro ao buscar cursos de faculdade:', error);
+        throw error;
+      }
+      
+      return (data as unknown as AulaFaculdade[]) || [];
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 20 * 60 * 1000, // 20 minutes cache
@@ -191,7 +182,7 @@ export const useFaculdadeOrganizada = () => {
       // Adicionar aula
       const aulaCompleta: AulaFaculdadeCompleta = {
         id: aula.id,
-        nome: aula.assunto,
+        nome: aula.Assunto,
         numeroAula: aula['numero-aula'],
         capa: aula['capa-assunto'],
         video: aula.video,
