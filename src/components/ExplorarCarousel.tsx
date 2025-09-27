@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, X, BookOpen, Video, Newspaper, Radar, GraduationCap } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, BookOpen, Video, Newspaper, Radar, GraduationCap, FileText, Scale, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigation } from '@/context/NavigationContext';
-import { useAppFunctions } from '@/hooks/useAppFunctions';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CarouselItem {
@@ -11,115 +10,225 @@ interface CarouselItem {
   description: string;
   image: string;
   function: string;
+  orientation: 'vertical' | 'horizontal';
+}
+
+interface CategoryCarousel {
+  id: string;
+  title: string;
+  description: string;
+  function: string;
   icon: any;
-  type: 'curso' | 'livro' | 'funcionalidade';
+  items: CarouselItem[];
+  color: string;
 }
 
 export const ExplorarCarousel = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [items, setItems] = useState<CarouselItem[]>([]);
+  const [categories, setCategories] = useState<CategoryCarousel[]>([]);
+  const [carouselIndices, setCarouselIndices] = useState<{[key: string]: number}>({});
   const { setCurrentFunction, setIsExplorarOpen } = useNavigation();
 
-  // Carregar dados reais do Supabase
+  // Carregar dados do Supabase por categoria
   useEffect(() => {
     const loadCarouselData = async () => {
       try {
-        // Buscar cursos
+        const categoriesData: CategoryCarousel[] = [];
+
+        // 1. Cursos Preparatórios
         const { data: cursos } = await supabase
           .from('CURSOS-APP-VIDEO')
           .select('*')
-          .limit(3);
+          .limit(8);
 
-        // Buscar livros da biblioteca
+        if (cursos && cursos.length > 0) {
+          const cursosItems = cursos
+            .filter(curso => curso.capa)
+            .map(curso => ({
+              id: `curso-${curso.id}`,
+              title: curso.Tema || 'Curso',
+              description: curso.Assunto || 'Videoaula especializada',
+              image: curso.capa,
+              function: 'Cursos Preparatórios',
+              orientation: Math.random() > 0.6 ? 'vertical' : 'horizontal' as 'vertical' | 'horizontal'
+            }));
+
+          categoriesData.push({
+            id: 'cursos',
+            title: 'Cursos Preparatórios',
+            description: 'Videoaulas completas para concursos e OAB',
+            function: 'Cursos Preparatórios',
+            icon: GraduationCap,
+            items: cursosItems,
+            color: 'from-blue-500 to-blue-700'
+          });
+        }
+
+        // 2. Biblioteca Jurídica
         const { data: livros } = await supabase
           .from('BIBLIOTECA-JURIDICA')
           .select('*')
-          .limit(4);
+          .limit(8);
 
-        // Buscar capas de funções
-        const { data: capasFuncoes } = await supabase
-          .from('CAPAS-FUNÇÃO')
-          .select('*');
+        if (livros && livros.length > 0) {
+          const livrosItems = livros
+            .filter(livro => livro.imagem)
+            .map(livro => ({
+              id: `livro-${livro.id}`,
+              title: livro.livro || 'Livro Jurídico',
+              description: livro.sobre ? livro.sobre.substring(0, 100) + '...' : 'Biblioteca jurídica completa',
+              image: livro.imagem,
+              function: 'Biblioteca Clássicos',
+              orientation: Math.random() > 0.4 ? 'vertical' : 'horizontal' as 'vertical' | 'horizontal'
+            }));
 
-        const carouselData: CarouselItem[] = [];
-
-        // Adicionar cursos
-        if (cursos) {
-          cursos.forEach(curso => {
-            if (curso.capa) {
-              carouselData.push({
-                id: `curso-${curso.id}`,
-                title: curso.Tema || 'Curso Preparatório',
-                description: curso.Assunto || 'Videoaulas especializadas',
-                image: curso.capa,
-                function: 'Cursos Preparatórios',
-                icon: GraduationCap,
-                type: 'curso'
-              });
-            }
+          categoriesData.push({
+            id: 'biblioteca',
+            title: 'Biblioteca Jurídica',
+            description: 'Milhares de livros e doutrinas organizadas',
+            function: 'Biblioteca Clássicos',
+            icon: BookOpen,
+            items: livrosItems,
+            color: 'from-green-500 to-green-700'
           });
         }
 
-        // Adicionar livros
-        if (livros) {
-          livros.forEach(livro => {
-            if (livro.imagem) {
-              carouselData.push({
-                id: `livro-${livro.id}`,
-                title: livro.livro || 'Biblioteca Jurídica',
-                description: livro.sobre || 'Acervo completo de livros jurídicos',
-                image: livro.imagem,
-                function: 'Biblioteca Clássicos',
-                icon: BookOpen,
-                type: 'livro'
-              });
-            }
+        // 3. Videoaulas
+        const { data: videoaulas } = await supabase
+          .from('VIDEO-AULAS-DIAS')
+          .select('*')
+          .limit(6);
+
+        if (videoaulas && videoaulas.length > 0) {
+          const videoaulasItems = videoaulas
+            .filter(video => video.capa)
+            .map(video => ({
+              id: `video-${video.id}`,
+              title: video.Tema || 'Videoaula',
+              description: video.Assunto || 'Aula especializada',
+              image: video.capa,
+              function: 'Videoaulas',
+              orientation: 'horizontal' as 'vertical' | 'horizontal'
+            }));
+
+          categoriesData.push({
+            id: 'videoaulas',
+            title: 'Videoaulas Especializadas',
+            description: 'Aulas com professores renomados',
+            function: 'Videoaulas',
+            icon: Video,
+            items: videoaulasItems,
+            color: 'from-purple-500 to-purple-700'
           });
         }
 
-        // Adicionar funcionalidades com capas
-        const funcionalidades = [
+        // 4. Biblioteca Fora da Toga
+        const { data: foraToga } = await supabase
+          .from('BILBIOTECA-FORA DA TOGA')
+          .select('*')
+          .limit(6);
+
+        if (foraToga && foraToga.length > 0) {
+          const foraTogaItems = foraToga
+            .filter(item => item['capa-livro'])
+            .map(item => ({
+              id: `fora-toga-${item.id}`,
+              title: item.livro || 'Desenvolvimento Pessoal',
+              description: item.sobre ? item.sobre.substring(0, 80) + '...' : 'Crescimento para juristas',
+              image: item['capa-livro'],
+              function: 'Fora da Toga',
+              orientation: Math.random() > 0.5 ? 'vertical' : 'horizontal' as 'vertical' | 'horizontal'
+            }));
+
+          categoriesData.push({
+            id: 'fora-toga',
+            title: 'Fora da Toga',
+            description: 'Desenvolvimento pessoal para juristas',
+            function: 'Fora da Toga',
+            icon: Brain,
+            items: foraTogaItems,
+            color: 'from-amber-500 to-orange-600'
+          });
+        }
+
+        // 5. Adicionar funcionalidades sem dados específicos mas com capas
+        const functionalityCategories = [
           {
             id: 'blog',
             title: 'Blog Jurídico',
             description: 'Artigos e análises especializadas',
             function: 'Blog Jurídico',
-            icon: Newspaper
+            icon: Newspaper,
+            color: 'from-pink-500 to-rose-600'
           },
           {
             id: 'radar',
             title: 'Radar Jurídico',
             description: 'Monitore tendências e mudanças',
             function: 'Radar Jurídico',
-            icon: Radar
+            icon: Radar,
+            color: 'from-red-500 to-red-700'
           },
           {
-            id: 'videoaulas',
-            title: 'Videoaulas',
-            description: 'Aulas com professores especializados',
-            function: 'Videoaulas',
-            icon: Video
+            id: 'vademecum',
+            title: 'Vade Mecum Digital',
+            description: 'Leis e códigos sempre atualizados',
+            function: 'Vade Mecum Digital',
+            icon: Scale,
+            color: 'from-indigo-500 to-blue-600'
           }
         ];
 
-        funcionalidades.forEach(func => {
-          const capa = capasFuncoes?.find(c => 
-            c['Função']?.toLowerCase().includes(func.title.toLowerCase())
-          );
-          
-          carouselData.push({
+        // Buscar capas de funções para as funcionalidades
+        const { data: capasFuncoes } = await supabase
+          .from('CAPAS-FUNÇÃO')
+          .select('*');
+
+        functionalityCategories.forEach(func => {
+          const capasRelacionadas = capasFuncoes?.filter(c => 
+            c['Função']?.toLowerCase().includes(func.title.toLowerCase().split(' ')[0])
+          ) || [];
+
+          // Se não tiver capas específicas, usar imagens padrão
+          const items = capasRelacionadas.length > 0 
+            ? capasRelacionadas.map((capa, index) => ({
+                id: `${func.id}-${index}`,
+                title: func.title,
+                description: func.description,
+                image: capa.capa,
+                function: func.function,
+                orientation: Math.random() > 0.5 ? 'vertical' : 'horizontal' as 'vertical' | 'horizontal'
+              }))
+            : Array.from({ length: 3 }, (_, index) => ({
+                id: `${func.id}-${index}`,
+                title: func.title,
+                description: func.description,
+                image: `https://images.unsplash.com/photo-158982954${5 + index}-d10d557cf95f?w=400&h=300&fit=crop`,
+                function: func.function,
+                orientation: Math.random() > 0.5 ? 'vertical' : 'horizontal' as 'vertical' | 'horizontal'
+              }));
+
+          categoriesData.push({
             id: func.id,
             title: func.title,
             description: func.description,
-            image: capa?.capa || 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=400&h=300&fit=crop',
             function: func.function,
             icon: func.icon,
-            type: 'funcionalidade'
+            items,
+            color: func.color
           });
         });
 
-        setItems(carouselData);
+        // Filtrar categorias que têm items
+        const validCategories = categoriesData.filter(cat => cat.items.length > 0);
+        setCategories(validCategories);
+
+        // Inicializar índices dos carrosséis
+        const indices: {[key: string]: number} = {};
+        validCategories.forEach(cat => {
+          indices[cat.id] = 0;
+        });
+        setCarouselIndices(indices);
+
       } catch (error) {
         console.error('Erro ao carregar dados do carrossel:', error);
       }
@@ -128,27 +237,22 @@ export const ExplorarCarousel = () => {
     loadCarouselData();
   }, []);
 
-  // Auto-play
-  useEffect(() => {
-    if (!isAutoPlaying || items.length === 0) return;
-    
-    const interval = setInterval(() => {
-      setCurrentIndex(prev => (prev + 1) % items.length);
-    }, 3000);
-    
-    return () => clearInterval(interval);
-  }, [isAutoPlaying, items.length]);
+  const handlePrevious = useCallback((categoryId: string) => {
+    setCarouselIndices(prev => ({
+      ...prev,
+      [categoryId]: prev[categoryId] > 0 ? prev[categoryId] - 1 : 0
+    }));
+  }, []);
 
-  const handlePrevious = useCallback(() => {
-    setCurrentIndex(prev => (prev - 1 + items.length) % items.length);
-  }, [items.length]);
+  const handleNext = useCallback((categoryId: string, maxItems: number) => {
+    setCarouselIndices(prev => ({
+      ...prev,
+      [categoryId]: prev[categoryId] < maxItems - 1 ? prev[categoryId] + 1 : maxItems - 1
+    }));
+  }, []);
 
-  const handleNext = useCallback(() => {
-    setCurrentIndex(prev => (prev + 1) % items.length);
-  }, [items.length]);
-
-  const handleItemClick = useCallback((item: CarouselItem) => {
-    setCurrentFunction(item.function);
+  const handleItemClick = useCallback((functionName: string) => {
+    setCurrentFunction(functionName);
     setIsExplorarOpen(false);
   }, [setCurrentFunction, setIsExplorarOpen]);
 
@@ -156,16 +260,26 @@ export const ExplorarCarousel = () => {
     setIsExplorarOpen(false);
   }, [setIsExplorarOpen]);
 
-  if (items.length === 0) {
+  const getVisibleItems = (items: CarouselItem[], startIndex: number) => {
+    const visibleCount = 3; // Mostrar 3 items por vez
+    return items.slice(startIndex, startIndex + visibleCount);
+  };
+
+  const getItemSize = (orientation: 'vertical' | 'horizontal', index: number) => {
+    if (orientation === 'vertical') {
+      return 'w-24 h-32'; // Mais estreito e alto
+    } else {
+      return index === 0 ? 'w-32 h-24' : 'w-28 h-20'; // Primeiro maior, outros menores
+    }
+  };
+
+  if (categories.length === 0) {
     return (
       <div className="fixed inset-0 bg-background-deep/95 backdrop-blur-md z-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
-
-  const currentItem = items[currentIndex];
-  const Icon = currentItem.icon;
 
   return (
     <div className="fixed inset-0 bg-background-deep/95 backdrop-blur-md z-50 flex flex-col">
@@ -190,96 +304,106 @@ export const ExplorarCarousel = () => {
         </Button>
       </div>
 
-      {/* Carrossel compacto */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm mx-auto relative">
-          {/* Card principal */}
-          <div 
-            onClick={() => handleItemClick(currentItem)}
-            className="relative w-full h-80 rounded-2xl overflow-hidden cursor-pointer group shadow-xl hover:shadow-2xl transition-all duration-300"
-            onMouseEnter={() => setIsAutoPlaying(false)}
-            onMouseLeave={() => setIsAutoPlaying(true)}
-          >
-            {/* Background image */}
-            <div 
-              className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-              style={{
-                backgroundImage: `url(${currentItem.image})`,
-                filter: 'brightness(0.7) contrast(1.1)'
-              }}
-            />
-            
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-            
-            {/* Content */}
-            <div className="absolute inset-0 p-6 flex flex-col justify-between text-white">
-              <div className="flex items-start justify-between">
-                <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm">
-                  <Icon className="w-6 h-6" />
+      {/* Lista de carrosséis */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {categories.map((category) => {
+          const Icon = category.icon;
+          const currentIndex = carouselIndices[category.id] || 0;
+          const visibleItems = getVisibleItems(category.items, currentIndex);
+          const canGoBack = currentIndex > 0;
+          const canGoForward = currentIndex < category.items.length - 3;
+
+          return (
+            <div key={category.id} className="space-y-3">
+              {/* Header da categoria */}
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg bg-gradient-to-r ${category.color}/20`}>
+                  <Icon className="w-5 h-5 text-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">{category.title}</h3>
+                  <p className="text-xs text-muted-foreground">{category.description}</p>
                 </div>
               </div>
-              
-              <div>
-                <h3 className="text-xl font-bold mb-2 drop-shadow-lg">
-                  {currentItem.title}
-                </h3>
-                <p className="text-sm text-white/90 drop-shadow-md line-clamp-2">
-                  {currentItem.description}
-                </p>
+
+              {/* Carrossel horizontal */}
+              <div className="relative">
+                <div className="flex gap-3 overflow-hidden">
+                  {visibleItems.map((item, index) => (
+                    <div
+                      key={item.id}
+                      onClick={() => handleItemClick(item.function)}
+                      className={`
+                        ${getItemSize(item.orientation, index)}
+                        relative overflow-hidden rounded-xl cursor-pointer 
+                        shadow-md hover:shadow-lg transition-all duration-300 
+                        hover:scale-105 flex-shrink-0
+                      `}
+                    >
+                      {/* Background image */}
+                      <div 
+                        className="absolute inset-0 bg-cover bg-center"
+                        style={{
+                          backgroundImage: `url(${item.image})`,
+                          filter: 'brightness(0.8) contrast(1.1)'
+                        }}
+                      />
+                      
+                      {/* Gradient overlay */}
+                      <div className={`absolute inset-0 bg-gradient-to-t ${category.color}/60`} />
+                      
+                      {/* Content */}
+                      <div className="absolute inset-0 p-2 flex flex-col justify-end text-white">
+                        <h4 className="text-xs font-semibold drop-shadow line-clamp-2">
+                          {item.title}
+                        </h4>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Navigation arrows */}
+                {canGoBack && (
+                  <Button
+                    onClick={() => handlePrevious(category.id)}
+                    variant="outline"
+                    size="sm"
+                    className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-2 rounded-full bg-background/90 backdrop-blur-sm border-border/50 w-8 h-8 p-0"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                )}
+
+                {canGoForward && (
+                  <Button
+                    onClick={() => handleNext(category.id, category.items.length)}
+                    variant="outline"
+                    size="sm"
+                    className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-2 rounded-full bg-background/90 backdrop-blur-sm border-border/50 w-8 h-8 p-0"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                )}
+
+                {/* Progress indicator */}
+                <div className="flex justify-center gap-1 mt-2">
+                  {Array.from({ length: Math.ceil(category.items.length / 3) }, (_, index) => (
+                    <div
+                      key={index}
+                      className={`
+                        w-1.5 h-1.5 rounded-full transition-all duration-300
+                        ${Math.floor(currentIndex / 3) === index 
+                          ? 'bg-primary' 
+                          : 'bg-muted-foreground/30'
+                        }
+                      `}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Navigation arrows */}
-          <Button
-            onClick={handlePrevious}
-            variant="outline"
-            size="sm"
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 rounded-full bg-background/90 backdrop-blur-sm border-border/50 text-foreground hover:bg-background w-10 h-10 p-0"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-
-          <Button
-            onClick={handleNext}
-            variant="outline"
-            size="sm"
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 rounded-full bg-background/90 backdrop-blur-sm border-border/50 text-foreground hover:bg-background w-10 h-10 p-0"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Progress dots */}
-      <div className="flex justify-center gap-2 pb-8">
-        {items.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentIndex(index)}
-            className={`
-              w-2 h-2 rounded-full transition-all duration-300
-              ${index === currentIndex 
-                ? 'bg-primary scale-125' 
-                : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-              }
-            `}
-          />
-        ))}
-      </div>
-
-      {/* Auto-play indicator */}
-      <div className="absolute bottom-4 right-4">
-        <div className={`
-          px-2 py-1 rounded-lg text-xs font-medium transition-colors
-          ${isAutoPlaying 
-            ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-            : 'bg-muted/20 text-muted-foreground border border-border/30'
-          }
-        `}>
-          {isAutoPlaying ? 'Auto-play ativo' : 'Pausado'}
-        </div>
+          );
+        })}
       </div>
     </div>
   );
