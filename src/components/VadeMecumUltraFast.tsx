@@ -8,10 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigation } from '@/context/NavigationContext';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
+import { ProfessoraIAFloatingButton } from '@/components/ProfessoraIAFloatingButton';
 
 interface VadeMecumLegalCode {
   id: string;
@@ -308,7 +310,7 @@ export const VadeMecumUltraFast: React.FC = () => {
     codeInfo: VadeMecumLegalCode | null;
     onCopy: () => void;
   }) => {
-    const [isLoading, setIsLoading] = useState(false);
+    const [loadingState, setLoadingState] = useState<'explicar' | 'exemplo' | null>(null);
     const [explanation, setExplanation] = useState('');
     const [practicalExample, setPracticalExample] = useState('');
     const [showExplanation, setShowExplanation] = useState(false);
@@ -318,11 +320,14 @@ export const VadeMecumUltraFast: React.FC = () => {
     const articleText = article.Artigo || '';
     const articleNumber = article["Número do Artigo"] || article.numero || '';
     
-    // Verificar se realmente há um número do artigo (não null, undefined ou string vazia)
-    const hasArticleNumber = articleNumber && articleNumber.toString().trim() !== '' && articleNumber.toString().trim() !== 'NULL';
+    // Verificar se realmente há um número do artigo válido (não ID numérico simples)
+    const hasArticleNumber = articleNumber && 
+      articleNumber.toString().trim() !== '' && 
+      articleNumber.toString().trim() !== 'NULL' &&
+      (articleNumber.toString().includes('Art') || articleNumber.toString().includes('°') || articleNumber.toString().includes('º'));
 
     const callGeminiAPI = async (action: 'explicar' | 'exemplo' | 'apresentar') => {
-      setIsLoading(true);
+      setLoadingState(action === 'apresentar' ? null : action);
       try {
         const { data, error } = await supabase.functions.invoke('gemini-vademecum', {
           body: {
@@ -355,7 +360,7 @@ export const VadeMecumUltraFast: React.FC = () => {
           variant: "destructive"
         });
       } finally {
-        setIsLoading(false);
+        setLoadingState(null);
       }
     };
 
@@ -478,30 +483,30 @@ export const VadeMecumUltraFast: React.FC = () => {
                 <>
                   <Button
                     onClick={() => callGeminiAPI('explicar')}
-                    disabled={isLoading}
+                    disabled={loadingState !== null}
                     className="bg-gradient-to-r from-primary to-accent-legal hover:from-primary/90 hover:to-accent-legal/90 text-primary-foreground border-none"
                     size="sm"
                   >
-                    {isLoading ? (
+                    {loadingState === 'explicar' ? (
                       <div className="animate-spin h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full mr-2" />
                     ) : (
                       <BookOpen className="h-4 w-4 mr-2" />
                     )}
-                    {isLoading ? 'Gerando explicação...' : 'Explicar'}
+                    {loadingState === 'explicar' ? 'Gerando explicação...' : 'Explicar'}
                   </Button>
                   <Button
                     onClick={() => callGeminiAPI('exemplo')}
-                    disabled={isLoading}
+                    disabled={loadingState !== null}
                     variant="outline"
                     size="sm"
                     className="border-primary/30 hover:border-primary/50 hover:bg-primary/10"
                   >
-                    {isLoading ? (
+                    {loadingState === 'exemplo' ? (
                       <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full mr-2" />
                     ) : (
                       <Lightbulb className="h-4 w-4 mr-2" />
                     )}
-                    {isLoading ? 'Gerando exemplo...' : 'Exemplo'}
+                    {loadingState === 'exemplo' ? 'Gerando exemplo...' : 'Exemplo'}
                   </Button>
                 </>
               )}
@@ -552,6 +557,86 @@ export const VadeMecumUltraFast: React.FC = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Modal de Explicação */}
+        <Dialog open={showExplanation} onOpenChange={setShowExplanation}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-primary" />
+                Explicação - {hasArticleNumber ? articleNumber : 'Texto Legal'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="vademecum-text p-4 bg-muted/50 rounded-lg">
+                {explanation.split('\n').map((line, index) => (
+                  <p key={index} className="mb-2 last:mb-0">{line}</p>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => navigator.clipboard.writeText(explanation)}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copiar Explicação
+                </Button>
+                <Button onClick={() => setShowExplanation(false)} size="sm">
+                  Fechar
+                </Button>
+              </div>
+              
+              {/* Professora IA para tirar mais dúvidas */}
+              <div className="pt-4 border-t">
+                <ProfessoraIAFloatingButton onOpen={() => {}} />
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  Tem mais dúvidas? Converse com a Professora IA
+                </p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Exemplo */}
+        <Dialog open={showExample} onOpenChange={setShowExample}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-warning" />
+                Exemplo Prático - {hasArticleNumber ? articleNumber : 'Texto Legal'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="vademecum-text p-4 bg-muted/50 rounded-lg">
+                {practicalExample.split('\n').map((line, index) => (
+                  <p key={index} className="mb-2 last:mb-0">{line}</p>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => navigator.clipboard.writeText(practicalExample)}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copiar Exemplo
+                </Button>
+                <Button onClick={() => setShowExample(false)} size="sm">
+                  Fechar
+                </Button>
+              </div>
+              
+              {/* Professora IA para tirar mais dúvidas */}
+              <div className="pt-4 border-t">
+                <ProfessoraIAFloatingButton onOpen={() => {}} />
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  Tem mais dúvidas? Converse com a Professora IA
+                </p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </motion.div>
     );
   };
