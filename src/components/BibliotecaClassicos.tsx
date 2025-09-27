@@ -10,6 +10,7 @@ import { BibliotecaLeitor } from './BibliotecaLeitor';
 import { Input } from '@/components/ui/input';
 import { JuridicalBookCard } from './JuridicalBookCard';
 import { MobileBookCard } from './MobileBookCard';
+import { SearchPreviewBar } from './SearchPreviewBar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -177,16 +178,22 @@ export const BibliotecaClassicos = () => {
           {/* Barra de busca global - só nas áreas */}
           {viewMode === 'areas' && (
             <div className="mb-8">
-              <div className="relative max-w-md mx-auto">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar em toda a biblioteca..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearchSubmit()}
-                  className="pl-10"
-                />
-              </div>
+              <SearchPreviewBar
+                placeholder="Buscar em toda a biblioteca..."
+                data={livros || []}
+                searchFields={['livro', 'area', 'sobre', 'autor', 'beneficios']}
+                onItemClick={handleBookClick}
+                renderResult={(livro) => ({
+                  id: livro.id,
+                  title: livro.livro,
+                  subtitle: livro.autor ? `por ${livro.autor}` : (livro.sobre ? livro.sobre.substring(0, 100) + '...' : ''),
+                  category: livro.area,
+                  image: livro.imagem
+                })}
+                maxResults={8}
+                showSuggestions={true}
+                className="max-w-md mx-auto"
+              />
             </div>
           )}
 

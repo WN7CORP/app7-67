@@ -39,7 +39,7 @@ export const BibliotecaAreasOAB = ({
       </div>
 
       <motion.div 
-        className="grid grid-cols-2 gap-4"
+        className="grid grid-cols-2 gap-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -59,8 +59,8 @@ export const BibliotecaAreasOAB = ({
                 className="group cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 bg-card/50 backdrop-blur-sm border-border/50"
                 onClick={() => onAreaClick(area)}
               >
-                <CardContent className="p-4">
-                  <div className="aspect-[3/4] mb-4 rounded-lg overflow-hidden bg-gradient-to-br from-primary/5 to-secondary/5 relative">
+                <CardContent className="p-6">
+                  <div className="aspect-[3/4] mb-6 rounded-lg overflow-hidden bg-gradient-to-br from-primary/5 to-secondary/5 relative">
                     {areaData?.capa ? (
                       <OptimizedImage
                         src={areaData.capa}
@@ -69,23 +69,23 @@ export const BibliotecaAreasOAB = ({
                       />
                     ) : (
                       <div className="flex items-center justify-center h-full">
-                        <BookOpen className="h-16 w-16 text-muted-foreground/50" />
+                        <BookOpen className="h-20 w-20 text-muted-foreground/50" />
                       </div>
                     )}
                     
-                    <div className="absolute top-2 right-2">
-                      <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm">
+                    <div className="absolute top-3 right-3">
+                      <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm text-sm">
                         {totalLivros} {totalLivros === 1 ? 'livro' : 'livros'}
                       </Badge>
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                  <div className="space-y-3">
+                    <h3 className="font-bold text-base line-clamp-2 group-hover:text-primary transition-colors">
                       {area}
                     </h3>
                     {areaData?.profissao && (
-                      <p className="text-xs text-muted-foreground line-clamp-1">
+                      <p className="text-sm text-muted-foreground line-clamp-1">
                         {areaData.profissao}
                       </p>
                     )}

@@ -1,8 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Search, X } from 'lucide-react';
+import { Search, X, Lightbulb } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Função para normalizar texto (remover acentos)
+const normalizeText = (text: string): string => {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+};
+
+// Função para calcular distância de Levenshtein
+const levenshteinDistance = (str1: string, str2: string): number => {
+  const matrix = [];
+  const m = str1.length;
+  const n = str2.length;
+
+  if (m === 0) return n;
+  if (n === 0) return m;
+
+  for (let i = 0; i <= n; i++) {
+    matrix[i] = [i];
+  }
+
+  for (let j = 0; j <= m; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= m; j++) {
+      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
+        );
+      }
+    }
+  }
+
+  return matrix[n][m];
+};
 
 interface SearchResult {
   id: string | number;
@@ -20,6 +62,7 @@ interface SearchPreviewBarProps {
   renderResult?: (item: any) => SearchResult;
   maxResults?: number;
   className?: string;
+  showSuggestions?: boolean;
 }
 
 export const SearchPreviewBar = ({
@@ -29,30 +72,74 @@ export const SearchPreviewBar = ({
   onItemClick,
   renderResult,
   maxResults = 5,
-  className = ""
+  className = "",
+  showSuggestions = true
 }: SearchPreviewBarProps) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (!query.trim()) {
       setResults([]);
+      setSuggestions([]);
       setIsOpen(false);
       return;
     }
 
-    const searchQuery = query.toLowerCase();
+    const normalizedQuery = normalizeText(query);
+    
+    // Buscar resultados
     const filtered = data.filter(item => 
       searchFields.some(field => {
         const value = getNestedValue(item, field);
-        return value && value.toString().toLowerCase().includes(searchQuery);
+        if (!value) return false;
+        const normalizedValue = normalizeText(value.toString());
+        return normalizedValue.includes(normalizedQuery);
       })
     ).slice(0, maxResults);
 
     setResults(filtered);
-    setIsOpen(filtered.length > 0);
-  }, [query, data, searchFields, maxResults]);
+
+    // Gerar sugestões se não há resultados e sugestões estão habilitadas
+    if (filtered.length === 0 && showSuggestions) {
+      const allTerms = new Set<string>();
+      
+      data.forEach(item => {
+        searchFields.forEach(field => {
+          const value = getNestedValue(item, field);
+          if (value && typeof value === 'string') {
+            normalizeText(value).split(/\s+/).forEach(word => {
+              if (word.length > 2) {
+                allTerms.add(word);
+              }
+            });
+          }
+        });
+      });
+
+      const candidateSuggestions: { term: string; distance: number }[] = [];
+      
+      Array.from(allTerms).forEach(term => {
+        const distance = levenshteinDistance(normalizedQuery, term);
+        if (distance <= 3 && distance > 0) {
+          candidateSuggestions.push({ term, distance });
+        }
+      });
+
+      const topSuggestions = candidateSuggestions
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, 3)
+        .map(s => s.term);
+
+      setSuggestions(topSuggestions);
+    } else {
+      setSuggestions([]);
+    }
+
+    setIsOpen(filtered.length > 0 || (filtered.length === 0 && showSuggestions && query.trim().length > 2));
+  }, [query, data, searchFields, maxResults, showSuggestions]);
 
   const getNestedValue = (obj: any, path: string) => {
     return path.split('.').reduce((current, key) => current?.[key], obj);
@@ -107,6 +194,7 @@ export const SearchPreviewBar = ({
           >
             <Card className="shadow-lg border-border/50 bg-background/95 backdrop-blur-sm">
               <div className="max-h-80 overflow-y-auto">
+                {/* Resultados */}
                 {results.map((item, index) => {
                   const result = renderFunc(item);
                   return (
@@ -149,6 +237,39 @@ export const SearchPreviewBar = ({
                     </motion.div>
                   );
                 })}
+
+                {/* Sugestões quando não há resultados */}
+                {results.length === 0 && suggestions.length > 0 && (
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Lightbulb className="h-4 w-4 text-warning" />
+                      <span className="text-sm font-medium text-muted-foreground">
+                        Você quis dizer:
+                      </span>
+                    </div>
+                    {suggestions.map((suggestion, index) => (
+                      <motion.div
+                        key={suggestion}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        onClick={() => setQuery(suggestion)}
+                        className="px-3 py-2 rounded-md hover:bg-muted/50 cursor-pointer text-sm text-primary hover:text-primary/80 transition-colors"
+                      >
+                        {suggestion}
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Mensagem quando não há resultados nem sugestões */}
+                {results.length === 0 && suggestions.length === 0 && query.trim().length > 2 && (
+                  <div className="p-4 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Nenhum resultado encontrado para "{query}"
+                    </p>
+                  </div>
+                )}
               </div>
             </Card>
           </motion.div>

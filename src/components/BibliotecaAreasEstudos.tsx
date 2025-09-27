@@ -69,7 +69,7 @@ export const BibliotecaAreasEstudos = ({ livrosPorArea, areas, onAreaClick }: Bi
 
       {/* Grid de áreas */}
       <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 md:gap-7"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -93,7 +93,7 @@ export const BibliotecaAreasEstudos = ({ livrosPorArea, areas, onAreaClick }: Bi
                 className="group cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-0 overflow-hidden"
                 onClick={() => onAreaClick(area)}
               >
-                <div className={`h-16 sm:h-20 lg:h-24 relative overflow-hidden`}>
+                <div className={`h-20 sm:h-24 lg:h-28 relative overflow-hidden`}>
                   {/* Background image com capa da área se disponível */}
                   {capaAreaLink && capaAreaLink.trim() ? (
                     <div className="absolute inset-0">
@@ -123,13 +123,13 @@ export const BibliotecaAreasEstudos = ({ livrosPorArea, areas, onAreaClick }: Bi
                   </div>
                 </div>
                 
-                <CardContent className="p-3 sm:p-4 lg:p-6">
+                <CardContent className="p-4 sm:p-5 lg:p-7">
                   <div className="flex justify-between items-start">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-sm sm:text-base lg:text-lg text-foreground mb-1 sm:mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                      <h3 className="font-bold text-base sm:text-lg lg:text-xl text-foreground mb-2 sm:mb-3 group-hover:text-primary transition-colors line-clamp-2">
                         {area}
                       </h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-sm sm:text-base text-muted-foreground line-clamp-2">
                         Explore nossa coleção de materiais em {area.toLowerCase()}
                       </p>
                     </div>
