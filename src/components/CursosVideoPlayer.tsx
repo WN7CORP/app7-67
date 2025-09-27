@@ -263,7 +263,7 @@ export const CursosVideoPlayer = ({
   return (
     <div className="space-y-4">
       <div 
-        className="relative bg-black rounded-lg overflow-hidden group"
+        className="relative bg-black overflow-hidden group w-full"
         onMouseEnter={() => setShowControls(true)}
         onMouseLeave={() => setShowControls(false)}
       >
@@ -271,7 +271,7 @@ export const CursosVideoPlayer = ({
       <video
         ref={videoRef}
         src={videoUrl}
-        className="w-full h-[70vh] object-cover bg-black"
+        className="w-full h-auto bg-black"
         onClick={togglePlay}
         onLoadStart={() => {
           setCurrentTime(0);
