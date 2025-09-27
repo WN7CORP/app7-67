@@ -107,25 +107,8 @@ export const CursosVideoPlayer = ({
       if (initialTime > 0) {
         video.currentTime = initialTime;
       }
-      // Sempre inicializar como pausado para dar controle ao usuário
       setIsPlaying(false);
       video.muted = false;
-    };
-
-    const handleCanPlay = () => {
-      // Iniciar reprodução automática quando aula é carregada
-      if (initialTime > 0) {
-        video.currentTime = initialTime;
-      }
-      // Auto-start video when lesson loads
-      if (autoPlay) {
-        video.play().then(() => {
-          setIsPlaying(true);
-        }).catch((error) => {
-          console.warn('Autoplay blocked:', error);
-          setIsPlaying(false);
-        });
-      }
     };
 
     video.addEventListener('timeupdate', handleTimeUpdate);
@@ -133,7 +116,6 @@ export const CursosVideoPlayer = ({
     video.addEventListener('ended', handleEnded);
     video.addEventListener('loadeddata', handleLoadedData);
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
-    video.addEventListener('canplay', handleCanPlay);
 
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
@@ -141,9 +123,38 @@ export const CursosVideoPlayer = ({
       video.removeEventListener('ended', handleEnded);
       video.removeEventListener('loadeddata', handleLoadedData);
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    };
+  }, [initialTime, onProgress, onEnded, onNearEnd, nearEndTriggered, showNextLessonAlert]);
+
+  // Separate autoplay logic to avoid infinite loops
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !autoPlay) return;
+
+    const attemptAutoplay = async () => {
+      try {
+        await video.play();
+        setIsPlaying(true);
+      } catch (error) {
+        console.warn('Autoplay blocked by browser:', error);
+        setIsPlaying(false);
+      }
+    };
+
+    // Only attempt autoplay after video can play
+    const handleCanPlay = () => {
+      if (initialTime > 0) {
+        video.currentTime = initialTime;
+      }
+      attemptAutoplay();
+    };
+
+    video.addEventListener('canplay', handleCanPlay);
+    
+    return () => {
       video.removeEventListener('canplay', handleCanPlay);
     };
-  }, [initialTime, onProgress, onEnded, onNearEnd, autoPlay, isPlaying, nearEndTriggered, showNextLessonAlert]);
+  }, [videoUrl, autoPlay, initialTime]);
 
   // Reset near end trigger when video changes
   useEffect(() => {
@@ -152,16 +163,22 @@ export const CursosVideoPlayer = ({
     setAutoAdvanceCountdown(5);
   }, [videoUrl]);
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     const video = videoRef.current;
     if (!video) return;
 
-    if (isPlaying) {
-      video.pause();
-    } else {
-      video.play();
+    try {
+      if (isPlaying) {
+        video.pause();
+        setIsPlaying(false);
+      } else {
+        await video.play();
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.warn('Play/pause error:', error);
+      setIsPlaying(false);
     }
-    setIsPlaying(!isPlaying);
   };
 
   const toggleMute = () => {
@@ -249,13 +266,16 @@ export const CursosVideoPlayer = ({
       <video
         ref={videoRef}
         src={videoUrl}
-        className="w-full aspect-video"
+        className="w-full aspect-video bg-black"
         onClick={togglePlay}
-        onLoadStart={() => setCurrentTime(0)}
+        onLoadStart={() => {
+          setCurrentTime(0);
+          setIsPlaying(false);
+        }}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
         preload="metadata"
         playsInline
-        muted={false}
-        crossOrigin="anonymous"
         controls={false}
       />
 
