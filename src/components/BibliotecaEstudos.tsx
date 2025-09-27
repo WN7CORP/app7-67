@@ -3,12 +3,9 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, BookOpen, Search, Loader2 } from 'lucide-react';
 import { useNavigation } from '@/context/NavigationContext';
 import { useBibliotecaEstudos } from '@/hooks/useBibliotecaEstudos';
-import { BibliotecaAreasEstudos } from './BibliotecaAreasEstudos';
-import { BibliotecaListaEstudos } from './BibliotecaListaEstudos';
-import { BibliotecaLeitor } from './BibliotecaLeitor';
-import { Input } from '@/components/ui/input';
-import { JuridicalBookCard } from './JuridicalBookCard';
-import { MobileBookCard } from './MobileBookCard';
+import { StandardBibliotecaAreas } from './StandardBibliotecaAreas';
+import { StandardBibliotecaLista } from './StandardBibliotecaLista';
+import { StandardBibliotecaLeitor } from './StandardBibliotecaLeitor';
 import { SearchPreviewBar } from './SearchPreviewBar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -27,7 +24,7 @@ interface LivroEstudos {
   sobre: string;
 }
 
-type ViewMode = 'areas' | 'lista' | 'leitor' | 'busca';
+type ViewMode = 'areas' | 'lista' | 'leitor';
 
 export const BibliotecaEstudos = () => {
   const { setCurrentFunction } = useNavigation();
@@ -57,9 +54,6 @@ export const BibliotecaEstudos = () => {
     } else if (viewMode === 'lista') {
       setViewMode('areas');
       setSelectedArea(null);
-    } else if (viewMode === 'busca') {
-      setViewMode('areas');
-      setSearchTerm('');
     } else {
       setCurrentFunction(null);
     }
@@ -87,12 +81,6 @@ export const BibliotecaEstudos = () => {
     setViewMode('leitor');
   };
 
-  const handleSearchSubmit = () => {
-    if (searchTerm.trim()) {
-      setViewMode('busca');
-    }
-  };
-
   const getPageTitle = () => {
     switch (viewMode) {
       case 'areas':
@@ -101,22 +89,11 @@ export const BibliotecaEstudos = () => {
         return selectedArea || 'Lista de Materiais';
       case 'leitor':
         return selectedBook?.tema || 'Leitor';
-      case 'busca':
-        return `Busca: "${searchTerm}"`;
       default:
         return 'Biblioteca de Estudos';
     }
   };
 
-  // Filtrar livros por busca global
-  const filteredBooks = searchTerm
-    ? (livros || []).filter(livro => 
-        livro.tema?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        livro.area?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        livro.sobre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        livro.ordem?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : [];
 
   if (error) {
     return (
@@ -152,7 +129,7 @@ export const BibliotecaEstudos = () => {
   if (viewMode === 'leitor' && selectedBook) {
     return (
       <AnimatePresence mode="wait">
-        <BibliotecaLeitor
+        <StandardBibliotecaLeitor
           livro={selectedBook as any}
           onClose={handleBack}
         />
@@ -220,10 +197,11 @@ export const BibliotecaEstudos = () => {
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <BibliotecaAreasEstudos
+                  <StandardBibliotecaAreas
                     livrosPorArea={livrosPorArea}
                     areas={areas}
                     onAreaClick={handleAreaClick}
+                    title="📚 Biblioteca de Estudos Completa"
                   />
                 </motion.div>
               )}
@@ -236,88 +214,15 @@ export const BibliotecaEstudos = () => {
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <BibliotecaListaEstudos
+                  <StandardBibliotecaLista
                     area={selectedArea}
                     livros={livrosPorArea[selectedArea] || []}
                     onBack={handleBack}
-                    onItemClick={handleBookClick}
+                    onBookClick={handleBookClick}
                   />
                 </motion.div>
               )}
 
-              {viewMode === 'busca' && (
-                <motion.div
-                  key="busca"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div>
-                    <h2 className="text-xl font-bold mb-4">
-                      Resultados da busca "{searchTerm}"
-                    </h2>
-                    {filteredBooks.length === 0 ? (
-                      <div className="text-center py-12">
-                        <Search className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-                          Nenhum material encontrado
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Tente buscar com outros termos ou verifique a ortografia
-                        </p>
-                      </div>
-                    ) : (
-                      <motion.div 
-                        className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5'}`}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        {filteredBooks.map((livro) => (
-                          <motion.div
-                            key={livro.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            {isMobile ? (
-                              <MobileBookCard 
-                                livro={{
-                                  id: livro.id,
-                                  imagem: livro.capaLivroLink || '',
-                                  livro: livro.tema,
-                                  autor: '',
-                                  area: livro.area,
-                                  sobre: livro.sobre,
-                                  link: livro.link,
-                                  download: livro.download
-                                }} 
-                                onClick={() => handleBookClick(livro)}
-                              />
-                            ) : (
-                              <JuridicalBookCard 
-                                livro={{
-                                  id: livro.id,
-                                  imagem: livro.capaLivroLink || '',
-                                  livro: livro.tema,
-                                  autor: '',
-                                  area: livro.area,
-                                  sobre: livro.sobre,
-                                  link: livro.link,
-                                  download: livro.download
-                                }} 
-                                showAreaBadge={true}
-                                onClick={() => handleBookClick(livro)}
-                              />
-                            )}
-                          </motion.div>
-                        ))}
-                      </motion.div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
             </AnimatePresence>
           )}
         </div>

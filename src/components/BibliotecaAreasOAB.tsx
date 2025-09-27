@@ -31,15 +31,15 @@ export const BibliotecaAreasOAB = ({
 }: BibliotecaAreasOABProps) => {
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">Áreas do Exame da Ordem - OAB</h2>
-        <p className="text-muted-foreground">
+      <div className="text-center mb-8 sm:mb-10">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-5">Áreas do Exame da Ordem - OAB</h2>
+        <p className="text-muted-foreground text-base sm:text-lg lg:text-xl">
           Escolha a área para ver os livros específicos para o exame da OAB
         </p>
       </div>
 
       <motion.div 
-        className="grid grid-cols-2 gap-6"
+        className="grid grid-cols-2 gap-6 sm:gap-7 md:gap-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -56,11 +56,11 @@ export const BibliotecaAreasOAB = ({
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
               <Card 
-                className="group cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 bg-card/50 backdrop-blur-sm border-border/50"
+                className="group cursor-pointer hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-card/50 backdrop-blur-sm border-border/50 overflow-hidden shadow-lg"
                 onClick={() => onAreaClick(area)}
               >
-                <CardContent className="p-6">
-                  <div className="aspect-[3/4] mb-6 rounded-lg overflow-hidden bg-gradient-to-br from-primary/5 to-secondary/5 relative">
+                <CardContent className="p-6 sm:p-7 lg:p-8">
+                  <div className="aspect-[3/4] mb-6 sm:mb-8 rounded-lg overflow-hidden bg-gradient-to-br from-primary/5 to-secondary/5 relative">
                     {areaData?.capa ? (
                       <OptimizedImage
                         src={areaData.capa}
@@ -69,23 +69,23 @@ export const BibliotecaAreasOAB = ({
                       />
                     ) : (
                       <div className="flex items-center justify-center h-full">
-                        <BookOpen className="h-20 w-20 text-muted-foreground/50" />
+                        <BookOpen className="h-20 w-20 sm:h-24 sm:w-24 text-muted-foreground/50" />
                       </div>
                     )}
                     
                     <div className="absolute top-3 right-3">
-                      <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm text-sm">
+                      <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm text-sm sm:text-base">
                         {totalLivros} {totalLivros === 1 ? 'livro' : 'livros'}
                       </Badge>
                     </div>
                   </div>
                   
-                  <div className="space-y-3">
-                    <h3 className="font-bold text-base line-clamp-2 group-hover:text-primary transition-colors">
+                  <div className="space-y-3 sm:space-y-4">
+                    <h3 className="font-bold text-lg sm:text-xl lg:text-2xl line-clamp-2 group-hover:text-primary transition-colors">
                       {area}
                     </h3>
                     {areaData?.profissao && (
-                      <p className="text-sm text-muted-foreground line-clamp-1">
+                      <p className="text-sm sm:text-base text-muted-foreground line-clamp-1">
                         {areaData.profissao}
                       </p>
                     )}
