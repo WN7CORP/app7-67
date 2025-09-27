@@ -14,6 +14,7 @@ import { useNavigation } from '@/context/NavigationContext';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { ProfessoraIAFloatingButton } from '@/components/ProfessoraIAFloatingButton';
+import ReactMarkdown from 'react-markdown';
 
 interface VadeMecumLegalCode {
   id: string;
@@ -198,14 +199,19 @@ const VadeMecumUltraFast: React.FC = () => {
     });
   }, [isValidArticleNumber]);
 
-  // Filtro inteligente de artigos
+  // Filtro inteligente de artigos - apenas com números válidos
   const filteredArticles = useMemo(() => {
-    if (!searchTerm.trim()) return articles;
+    const validArticles = articles.filter(article => {
+      const articleNumber = article["Número do Artigo"] || article.numero || '';
+      return isValidArticleNumber(articleNumber);
+    });
+
+    if (!searchTerm.trim()) return validArticles;
 
     const searchLower = searchTerm.toLowerCase().trim();
     const searchNumbers = searchTerm.replace(/[^\d]/g, '');
 
-    return articles
+    return validArticles
       .map(article => {
         const articleNumber = article["Número do Artigo"] || article.numero || '';
         const articleContent = article["Artigo"] || article.conteudo || '';
@@ -235,7 +241,7 @@ const VadeMecumUltraFast: React.FC = () => {
       .sort((a, b) => b.score - a.score)
       .slice(0, 100) // Limita a 100 resultados para performance
       .map(item => item.article);
-  }, [articles, searchTerm]);
+  }, [articles, searchTerm, isValidArticleNumber]);
 
   // Carregar artigos com cache otimizado
   const loadArticles = useCallback(async (code: VadeMecumLegalCode) => {
@@ -755,13 +761,27 @@ const VadeMecumUltraFast: React.FC = () => {
           </DialogHeader>
           
           <div className="space-y-6">
-            <div className="vademecum-text p-6 bg-muted/30 rounded-lg border">
+            <div className="prose prose-slate dark:prose-invert max-w-none p-6 bg-muted/30 rounded-lg border">
               {generatedModal.content ? (
-                generatedModal.content.split('\n').map((line, index) => (
-                  <p key={index} className="mb-3 last:mb-0 text-base leading-relaxed">
-                    {line}
-                  </p>
-                ))
+                <div className="vademecum-text">
+                  <ReactMarkdown 
+                    components={{
+                      h1: ({...props}) => <h1 className="text-2xl font-bold mb-4 text-primary" {...props} />,
+                      h2: ({...props}) => <h2 className="text-xl font-semibold mb-3 text-primary" {...props} />,
+                      h3: ({...props}) => <h3 className="text-lg font-medium mb-2 text-primary" {...props} />,
+                      p: ({...props}) => <p className="mb-3 last:mb-0 text-base leading-relaxed" {...props} />,
+                      ul: ({...props}) => <ul className="list-disc pl-6 mb-3 space-y-1" {...props} />,
+                      ol: ({...props}) => <ol className="list-decimal pl-6 mb-3 space-y-1" {...props} />,
+                      li: ({...props}) => <li className="text-base leading-relaxed" {...props} />,
+                      blockquote: ({...props}) => <blockquote className="border-l-4 border-primary/30 pl-4 italic text-muted-foreground my-4" {...props} />,
+                      code: ({...props}) => <code className="bg-muted px-2 py-1 rounded text-sm font-mono" {...props} />,
+                      strong: ({...props}) => <strong className="font-semibold text-primary" {...props} />,
+                      em: ({...props}) => <em className="italic text-accent-legal" {...props} />
+                    }}
+                  >
+                    {generatedModal.content}
+                  </ReactMarkdown>
+                </div>
               ) : (
                 <p className="text-muted-foreground">Carregando conteúdo...</p>
               )}
@@ -797,13 +817,20 @@ const VadeMecumUltraFast: React.FC = () => {
             </div>
             
             {/* Professora IA */}
-            <div className="pt-4 border-t border-muted">
-              <div className="flex items-center justify-center">
+            <div className="pt-6 border-t border-muted bg-gradient-to-r from-primary/5 to-accent-legal/5 rounded-lg p-6">
+              <div className="text-center">
+                <h4 className="text-lg font-semibold mb-3 text-primary flex items-center justify-center gap-2">
+                  <Brain className="h-5 w-5" />
+                  Precisa de mais esclarecimentos?
+                </h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  A Professora IA está disponível para tirar todas as suas dúvidas sobre este artigo
+                </p>
                 <ProfessoraIAFloatingButton onOpen={() => {}} />
+                <p className="text-xs text-muted-foreground mt-3">
+                  💡 Clique para abrir uma conversa personalizada sobre este tema
+                </p>
               </div>
-              <p className="text-sm text-muted-foreground mt-3 text-center">
-                Tem mais dúvidas? Converse com a Professora IA para esclarecimentos adicionais
-              </p>
             </div>
           </div>
         </DialogContent>
