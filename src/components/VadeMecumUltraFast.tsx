@@ -199,19 +199,19 @@ const VadeMecumUltraFast: React.FC = () => {
     });
   }, [isValidArticleNumber]);
 
-  // Filtro inteligente de artigos - apenas com números válidos
+  // Filtro inteligente de artigos - separar por tipo
   const filteredArticles = useMemo(() => {
-    const validArticles = articles.filter(article => {
-      const articleNumber = article["Número do Artigo"] || article.numero || '';
-      return isValidArticleNumber(articleNumber);
+    const allValidArticles = articles.filter(article => {
+      const articleContent = article["Artigo"] || article.conteudo || '';
+      return articleContent.trim() !== '';
     });
 
-    if (!searchTerm.trim()) return validArticles;
+    if (!searchTerm.trim()) return allValidArticles;
 
     const searchLower = searchTerm.toLowerCase().trim();
     const searchNumbers = searchTerm.replace(/[^\d]/g, '');
 
-    return validArticles
+    return allValidArticles
       .map(article => {
         const articleNumber = article["Número do Artigo"] || article.numero || '';
         const articleContent = article["Artigo"] || article.conteudo || '';
@@ -241,7 +241,7 @@ const VadeMecumUltraFast: React.FC = () => {
       .sort((a, b) => b.score - a.score)
       .slice(0, 100) // Limita a 100 resultados para performance
       .map(item => item.article);
-  }, [articles, searchTerm, isValidArticleNumber]);
+  }, [articles, searchTerm]);
 
   // Carregar artigos com cache otimizado
   const loadArticles = useCallback(async (code: VadeMecumLegalCode) => {
@@ -363,6 +363,28 @@ const VadeMecumUltraFast: React.FC = () => {
     
     // Verifica se tem número válido (contém dígitos após remover caracteres não numéricos)
     const hasValidNumber = isValidArticleNumber(articleNumber);
+
+    // Layout compacto para cards sem número válido (seções, capítulos, etc.)
+    if (!hasValidNumber) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.02 }}
+          className="mb-2"
+        >
+          <Card className="bg-muted/30 border-muted/50 hover:bg-muted/40 transition-colors">
+            <CardContent className="p-2">
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                  {articleContent}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      );
+    }
 
     const handleExplain = async () => {
       setLoadingState(prev => ({ ...prev, explanation: true }));
@@ -532,15 +554,6 @@ const VadeMecumUltraFast: React.FC = () => {
                   <Copy className="h-3 w-3 mr-1" />
                   Copiar
                 </Button>
-                <Button
-                  onClick={() => speakText(articleContent)}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs"
-                >
-                  <Volume2 className="h-3 w-3 mr-1" />
-                  Ouvir
-                </Button>
                 
                 <Button
                   onClick={handleExplain}
@@ -550,11 +563,16 @@ const VadeMecumUltraFast: React.FC = () => {
                   className="text-xs"
                 >
                   {loadingState.explanation ? (
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary mr-1" />
+                      Gerando explicação...
+                    </>
                   ) : (
-                    <Brain className="h-3 w-3 mr-1" />
+                    <>
+                      <Brain className="h-3 w-3 mr-1" />
+                      Explicar
+                    </>
                   )}
-                  Explicar
                 </Button>
                 <Button
                   onClick={handleExample}
@@ -564,11 +582,16 @@ const VadeMecumUltraFast: React.FC = () => {
                   className="text-xs"
                 >
                   {loadingState.practicalExample ? (
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary" />
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary mr-1" />
+                      Gerando exemplo...
+                    </>
                   ) : (
-                    <Lightbulb className="h-3 w-3 mr-1" />
+                    <>
+                      <Lightbulb className="h-3 w-3 mr-1" />
+                      Exemplo
+                    </>
                   )}
-                  Exemplo
                 </Button>
               </div>
             </div>
@@ -788,26 +811,14 @@ const VadeMecumUltraFast: React.FC = () => {
             </div>
             
             <div className="flex flex-wrap gap-3">
-              {generatedModal.hasValidNumber && (
-                <>
-                  <Button
-                    onClick={() => navigator.clipboard.writeText(generatedModal.content)}
-                    variant="outline"
-                    size="sm"
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copiar {generatedModal.type === 'explicar' ? 'Explicação' : 'Exemplo'}
-                  </Button>
-                  <Button
-                    onClick={() => speakText(generatedModal.content)}
-                    variant="outline"
-                    size="sm"
-                  >
-                    <Volume2 className="h-4 w-4 mr-2" />
-                    Ouvir
-                  </Button>
-                </>
-              )}
+              <Button
+                onClick={() => navigator.clipboard.writeText(generatedModal.content)}
+                variant="outline"
+                size="sm"
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copiar {generatedModal.type === 'explicar' ? 'Explicação' : 'Exemplo'}
+              </Button>
               <Button 
                 onClick={() => setGeneratedModal(prev => ({ ...prev, open: false }))} 
                 size="sm"
