@@ -13,6 +13,24 @@ export const getVideoTitle = (video: { link: string }) => {
   }
 };
 
+// Função para normalizar URLs de vídeo (especialmente Dropbox)
+export const normalizeVideoUrl = (url: string): string => {
+  if (!url) return '';
+  
+  // Converter links do Dropbox para formato de reprodução direta
+  if (url.includes('dropbox.com')) {
+    // Garantir que termine com dl=1 para download direto
+    if (url.includes('dl=0')) {
+      return url.replace('dl=0', 'dl=1');
+    }
+    if (!url.includes('dl=1') && !url.includes('dl=0')) {
+      return url + (url.includes('?') ? '&' : '?') + 'dl=1';
+    }
+  }
+  
+  return url;
+};
+
 export const isValidVideoUrl = (url: string): boolean => {
   if (!url) return false;
   
@@ -24,10 +42,11 @@ export const isValidVideoUrl = (url: string): boolean => {
     // Check for direct video file extensions
     const hasVideoExtension = validExtensions.some(ext => pathname.endsWith(ext));
     
-    // Check for common video hosting patterns
+    // Check for common video hosting patterns including Dropbox
     const isVideoHost = urlObj.hostname.includes('youtube.com') || 
                        urlObj.hostname.includes('youtu.be') ||
                        urlObj.hostname.includes('vimeo.com') ||
+                       urlObj.hostname.includes('dropbox.com') ||
                        urlObj.hostname.includes('video') ||
                        hasVideoExtension;
     
@@ -37,7 +56,7 @@ export const isValidVideoUrl = (url: string): boolean => {
   }
 };
 
-export const getVideoType = (url: string): 'direct' | 'youtube' | 'vimeo' | 'unknown' => {
+export const getVideoType = (url: string): 'direct' | 'youtube' | 'vimeo' | 'dropbox' | 'unknown' => {
   try {
     const urlObj = new URL(url);
     
@@ -47,6 +66,10 @@ export const getVideoType = (url: string): 'direct' | 'youtube' | 'vimeo' | 'unk
     
     if (urlObj.hostname.includes('vimeo.com')) {
       return 'vimeo';
+    }
+    
+    if (urlObj.hostname.includes('dropbox.com')) {
+      return 'dropbox';
     }
     
     const validExtensions = ['.mp4', '.webm', '.ogg', '.avi', '.mov'];

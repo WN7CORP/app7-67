@@ -4,6 +4,7 @@ import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, SkipForward, Chevro
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LessonActionButtons } from '@/components/Cursos/LessonActionButtons';
+import { normalizeVideoUrl } from '@/utils/videoHelpers';
 
 interface CursosVideoPlayerProps {
   videoUrl: string;
@@ -270,7 +271,7 @@ export const CursosVideoPlayer = ({
       {/* Video Element */}
       <video
         ref={videoRef}
-        src={videoUrl}
+        src={normalizeVideoUrl(videoUrl)}
         className="w-full h-auto bg-black"
         onClick={togglePlay}
         onLoadStart={() => {
@@ -282,6 +283,7 @@ export const CursosVideoPlayer = ({
         preload="metadata"
         playsInline
         controls={false}
+        crossOrigin="anonymous"
       />
 
 
