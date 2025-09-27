@@ -271,7 +271,7 @@ export const CursosVideoPlayer = ({
       <video
         ref={videoRef}
         src={videoUrl}
-        className="w-full aspect-video bg-black"
+        className="w-full h-[70vh] object-cover bg-black"
         onClick={togglePlay}
         onLoadStart={() => {
           setCurrentTime(0);
@@ -284,15 +284,6 @@ export const CursosVideoPlayer = ({
         controls={false}
       />
 
-      {/* Video Overlay with Title - Hidden when playing */}
-      <div className={`absolute top-0 left-0 right-0 bg-gradient-to-b from-black/70 to-transparent p-4 transition-opacity duration-300 ${
-        !isPlaying ? 'opacity-100' : 'opacity-0'
-      }`}>
-        <h3 className="text-white font-semibold text-lg">{title}</h3>
-        {subtitle && (
-          <p className="text-white/80 text-sm">{subtitle}</p>
-        )}
-      </div>
 
       {/* Controls Overlay - Hidden when playing */}
       <div 
