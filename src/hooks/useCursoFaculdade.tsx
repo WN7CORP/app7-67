@@ -47,13 +47,56 @@ export const useCursoFaculdade = () => {
     queryKey: ['curso-faculdade'],
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
-          .rpc('fetch_all_legal_documents'); // Use a function that exists
+        // Por enquanto, vamos usar dados fictícios até a tabela estar configurada
+        const dadosFicticios: AulaFaculdade[] = [
+          {
+            id: 1,
+            semestre: "1",
+            modulo: "Introdução ao Direito",
+            tema: "Teoria Geral do Direito",
+            numero_aula: "1",
+            assunto: "Conceitos Fundamentais do Direito",
+            video: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            conteudo: "# Conceitos Fundamentais do Direito\n\nEsta aula introduz os conceitos básicos do direito...",
+            capa_assunto: "https://via.placeholder.com/300x200?text=Aula+1",
+            capa_tema: "https://via.placeholder.com/300x200?text=Teoria+Geral",
+            capa_modulo: "https://via.placeholder.com/300x200?text=Introdução",
+            capa_semestre: "https://via.placeholder.com/300x200?text=1º+Semestre",
+            material: "https://drive.google.com/file/example"
+          },
+          {
+            id: 2,
+            semestre: "1",
+            modulo: "Introdução ao Direito",
+            tema: "Teoria Geral do Direito",
+            numero_aula: "2",
+            assunto: "Fontes do Direito",
+            video: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            conteudo: "# Fontes do Direito\n\nAs fontes do direito são...",
+            capa_assunto: "https://via.placeholder.com/300x200?text=Aula+2",
+            capa_tema: "https://via.placeholder.com/300x200?text=Teoria+Geral",
+            capa_modulo: "https://via.placeholder.com/300x200?text=Introdução",
+            capa_semestre: "https://via.placeholder.com/300x200?text=1º+Semestre",
+            material: "https://drive.google.com/file/example"
+          },
+          {
+            id: 3,
+            semestre: "2",
+            modulo: "Direito Civil",
+            tema: "Direito das Pessoas",
+            numero_aula: "1",
+            assunto: "Pessoa Natural",
+            video: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            conteudo: "# Pessoa Natural\n\nConceito de pessoa natural...",
+            capa_assunto: "https://via.placeholder.com/300x200?text=Pessoa+Natural",
+            capa_tema: "https://via.placeholder.com/300x200?text=Direito+das+Pessoas",
+            capa_modulo: "https://via.placeholder.com/300x200?text=Direito+Civil",
+            capa_semestre: "https://via.placeholder.com/300x200?text=2º+Semestre",
+            material: "https://drive.google.com/file/example"
+          }
+        ];
         
-        if (error) throw error;
-        
-        // For now, return empty array until we have the correct table
-        return [] as AulaFaculdade[];
+        return dadosFicticios;
       } catch (error) {
         console.error('Erro ao buscar curso de faculdade:', error);
         return [] as AulaFaculdade[];
