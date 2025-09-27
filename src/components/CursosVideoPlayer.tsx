@@ -107,9 +107,9 @@ export const CursosVideoPlayer = ({
       if (initialTime > 0) {
         video.currentTime = initialTime;
       }
-      // Force unmute and prepare for autoplay
+      // Sempre inicializar como pausado para dar controle ao usuário
+      setIsPlaying(false);
       video.muted = false;
-      video.volume = 1;
     };
 
     const handleCanPlay = () => {
@@ -119,8 +119,6 @@ export const CursosVideoPlayer = ({
       }
       // Auto-start video when lesson loads
       if (autoPlay) {
-        // Force unmute before playing
-        video.muted = false;
         video.play().then(() => {
           setIsPlaying(true);
         }).catch((error) => {
@@ -380,6 +378,19 @@ export const CursosVideoPlayer = ({
         </div>
       </div>
 
+      {/* Center Play Button (when paused) */}
+      {!isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Button 
+            variant="ghost" 
+            size="lg"
+            onClick={togglePlay}
+            className="bg-black/50 hover:bg-black/70 text-white rounded-full p-4"
+          >
+            <Play className="h-8 w-8" />
+          </Button>
+        </div>
+      )}
 
       {/* Next Lesson Alert */}
       {showNextLessonAlert && (
