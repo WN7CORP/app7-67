@@ -137,33 +137,67 @@ export const GlobalSearch = ({ onClose }: GlobalSearchProps) => {
 
   // Navigate to function when clicking on result
   const handleResultClick = (result: SearchResult) => {
-    // Navegação específica baseada no tipo de conteúdo
+    // Navegação específica e inteligente baseada no tipo de conteúdo
     const { tableSource, originalData } = result.metadata;
     
-    if (result.type === 'video' && tableSource === 'CURSOS-APP-VIDEO') {
-      // Vai para Cursos Preparatórios com o curso específico
-      setCurrentFunction('Cursos Preparatórios');
-    } else if (result.type === 'resumo') {
-      // Vai para Resumos Jurídicos com o resumo específico
-      setCurrentFunction('Resumos Jurídicos');
-    } else if (result.type === 'lei' || result.type === 'artigo') {
-      // Vai para Vade Mecum com a lei específica
-      setCurrentFunction('Vade Mecum Digital');
-    } else if (result.type === 'livro') {
-      // Vai para a biblioteca específica baseada na tabela
+    // Mapeamento de navegação por tipo e tabela específica
+    if (result.type === 'livro') {
+      // Bibliotecas específicas
       if (tableSource?.includes('CLASSICOS')) {
         setCurrentFunction('Biblioteca Clássicos');
       } else if (tableSource?.includes('JURIDICA')) {
         setCurrentFunction('Biblioteca de Estudos');
+      } else if (tableSource?.includes('CONCURSO')) {
+        setCurrentFunction('Biblioteca Concurso Público');
+      } else if (tableSource?.includes('FORA DA TOGA')) {
+        setCurrentFunction('Biblioteca Fora da Toga');
+      } else if (tableSource?.includes('INDICACAO')) {
+        setCurrentFunction('Indicações de Livros');
       } else {
-        setCurrentFunction('Biblioteca Clássicos');
+        setCurrentFunction('Biblioteca de Estudos');
+      }
+    } else if (result.type === 'video') {
+      // Cursos e videoaulas específicas
+      if (tableSource === 'CURSOS-APP-VIDEO') {
+        setCurrentFunction('Cursos Preparatórios');
+      } else if (tableSource === 'CURSO-FACULDADE') {
+        setCurrentFunction('Curso Faculdade');
+      } else if (tableSource === 'VIDEO-AULAS-DIAS') {
+        setCurrentFunction('Videoaulas');
+      } else if (tableSource === 'JURIFLIX') {
+        setCurrentFunction('Juriflix');
+      } else {
+        setCurrentFunction('Videoaulas');
+      }
+    } else if (result.type === 'lei') {
+      // Sempre vai para Vade Mecum para todas as leis
+      setCurrentFunction('Vade Mecum Digital');
+    } else if (result.type === 'resumo') {
+      // Resumos e mapas mentais
+      if (tableSource === 'MAPAS MENTAIS') {
+        setCurrentFunction('Mapas Mentais');
+      } else {
+        setCurrentFunction('Resumos Jurídicos');
+      }
+    } else if (result.type === 'artigo') {
+      // Artigos específicos
+      if (tableSource === 'ARITIGOS-COMENTADOS') {
+        setCurrentFunction('Artigos Comentados');
+      } else if (tableSource === 'CURSO-ARTIGOS-LEIS') {
+        setCurrentFunction('Artigo por Artigo');
+      } else if (tableSource === 'OAB -EXAME' || tableSource === 'QUESTÕES-CURSO') {
+        setCurrentFunction('Banco de Questões');
+      } else if (tableSource === 'BLOGER') {
+        setCurrentFunction('Blogger Jurídico');
+      } else {
+        setCurrentFunction('Artigos Comentados');
       }
     } else {
       // Mapeamento padrão para outros tipos
       const functionMap: Record<SearchResult['type'], string> = {
         video: 'Videoaulas',
         audio: 'Áudio-aulas', 
-        livro: 'Biblioteca Clássicos',
+        livro: 'Biblioteca de Estudos',
         artigo: 'Artigos Comentados',
         resumo: 'Resumos Jurídicos',
         flashcard: 'Flashcards',

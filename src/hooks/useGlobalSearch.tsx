@@ -81,15 +81,23 @@ export const useGlobalSearch = () => {
       setIsSearching(true);
       
       try {
-        // Busca otimizada - categorias específicas corrigidas
+        // Busca otimizada com nova ordem de prioridade: Livros -> Cursos -> Leis -> Outras funções
         const searchPromises = [
-          // CURSOS PREPARATÓRIOS - apenas tabela específica de cursos
+          // 1. LIVROS (PRIORIDADE MÁXIMA) - Todas as bibliotecas
+          searchInTable('BIBLIOTECA-CLASSICOS', searchTerm, 'livro', 'livro', 'sobre', 'area'),
+          searchInTable('BIBLIOTECA-JURIDICA', searchTerm, 'livro', 'livro', 'sobre', 'area'),
+          searchInTable('BIBILIOTECA-NOVA-490', searchTerm, 'livro', 'Tema', 'Sobre', 'Área'),
+          searchInTable('BIBILIOTECA-CONCURSO', searchTerm, 'livro', 'Tema', 'Sobre', 'Área'),
+          searchInTable('BILBIOTECA-FORA DA TOGA', searchTerm, 'livro', 'livro', 'sobre', 'area'),
+          searchInTable('LIVROS-INDICACAO', searchTerm, 'livro', 'Titulo', 'Sobre', 'Autor'),
+          
+          // 2. CURSOS (SEGUNDA PRIORIDADE) - Todos os tipos de videoaulas
           searchInTable('CURSOS-APP-VIDEO', searchTerm, 'video', 'Aula', 'conteudo', 'Area'),
+          searchInTable('CURSO-FACULDADE', searchTerm, 'video', 'Assunto', 'conteudo', 'Tema'),
+          searchInTable('VIDEO-AULAS-DIAS', searchTerm, 'video', 'Aula', 'conteudo', 'Area'),
+          searchInTable('VIDEOS', searchTerm, 'video', 'area', 'link', 'area'),
           
-          // RESUMOS - Resumos jurídicos
-          searchInTable('RESUMOS-NOVOS', searchTerm, 'resumo', 'Subtema', 'Resumo detalhado', 'Área'),
-          
-          // LEIS - Vade Mecum (priorizadas)
+          // 3. LEIS (TERCEIRA PRIORIDADE) - Vade Mecum completo
           searchInTable('CF88', searchTerm, 'lei', 'Número do Artigo', 'Artigo', ''),
           searchInTable('CC', searchTerm, 'lei', 'Número do Artigo', 'Artigo', ''),
           searchInTable('CDC', searchTerm, 'lei', 'Número do Artigo', 'Artigo', ''),
@@ -97,26 +105,24 @@ export const useGlobalSearch = () => {
           searchInTable('CP', searchTerm, 'lei', 'Número do Artigo', 'Artigo', ''),
           searchInTable('CPC', searchTerm, 'lei', 'Número do Artigo', 'Artigo', ''),
           searchInTable('CPP', searchTerm, 'lei', 'Número do Artigo', 'Artigo', ''),
+          searchInTable('CTB', searchTerm, 'lei', 'Número do Artigo', 'Artigo', ''),
+          searchInTable('CTN', searchTerm, 'lei', 'Número do Artigo', 'Artigo', ''),
+          searchInTable('CE', searchTerm, 'lei', 'Número do Artigo', 'Artigo', ''),
+          searchInTable('ESTATUTO - OAB', searchTerm, 'lei', 'Número do Artigo', 'Artigo', ''),
+          searchInTable('ESTATUTO - IDOSO', searchTerm, 'lei', 'Número do Artigo', 'Artigo', ''),
           
-          // Artigos comentados (categorizados como artigos)
-          searchInTable('ARITIGOS-COMENTADOS', searchTerm, 'artigo', 'artigo', 'texto', 'Area'),
-          
-          // Áudio-aulas
-          searchInTable('AUDIOAULAS', searchTerm, 'audio', 'titulo', 'descricao', 'area'),
-          
-          // Notícias
-          searchInTable('NOTICIAS-AUDIO', searchTerm, 'noticia', 'Titulo', 'Resumo breve', 'portal'),
-          
-          // Flashcards
+          // 4. OUTRAS FUNÇÕES - Todas as demais funcionalidades
+          searchInTable('RESUMOS-NOVOS', searchTerm, 'resumo', 'Subtema', 'Resumo detalhado', 'Área'),
           searchInTable('FLASHCARDS', searchTerm, 'flashcard', 'pergunta', 'resposta', 'area'),
-          
-          // Biblioteca - Livros (otimizado)
-          searchInTable('BIBILIOTECA-NOVA-490', searchTerm, 'livro', 'Tema', 'Sobre', 'Área'),
-          searchInTable('BIBLIOTECA-JURIDICA', searchTerm, 'livro', 'livro', 'sobre', 'area'),
-          searchInTable('BIBLIOTECA-CLASSICOS', searchTerm, 'livro', 'livro', 'sobre', 'area'),
-          
-          // Questões OAB
+          searchInTable('ARITIGOS-COMENTADOS', searchTerm, 'artigo', 'artigo', 'texto', 'Area'),
+          searchInTable('CURSO-ARTIGOS-LEIS', searchTerm, 'artigo', 'artigo', 'analise', 'area'),
+          searchInTable('AUDIOAULAS', searchTerm, 'audio', 'titulo', 'descricao', 'area'),
+          searchInTable('NOTICIAS-AUDIO', searchTerm, 'noticia', 'Titulo', 'Resumo breve', 'portal'),
           searchInTable('OAB -EXAME', searchTerm, 'artigo', 'Enunciado', 'comentario', 'area'),
+          searchInTable('QUESTÕES-CURSO', searchTerm, 'artigo', 'Pergunta', 'Comentário', 'area'),
+          searchInTable('MAPAS MENTAIS', searchTerm, 'resumo', 'Subtema', 'Conteúdo', 'Área'),
+          searchInTable('JURIFLIX', searchTerm, 'video', 'nome', 'sinopse', 'tipo'),
+          searchInTable('BLOGER', searchTerm, 'artigo', 'Tema', 'Texto', 'Área'),
           
           // JusBlog - busca condicional otimizada
           ...(searchTerm.toLowerCase().includes('jusblog') || 
@@ -129,18 +135,18 @@ export const useGlobalSearch = () => {
         const results = await Promise.all(searchPromises);
         const flattened = results.flat();
         
-        // Ordenação otimizada por relevância e categoria
+        // Ordenação otimizada por relevância e nova ordem de prioridade
         const sorted = flattened.sort((a, b) => {
           const searchLower = searchTerm.toLowerCase();
           const aInTitle = a.title.toLowerCase().includes(searchLower);
           const bInTitle = b.title.toLowerCase().includes(searchLower);
           
-          // Prioridade 1: Títulos exatos
+          // Prioridade 1: Títulos exatos primeiro
           if (aInTitle && !bInTitle) return -1;
           if (!aInTitle && bInTitle) return 1;
           
-          // Prioridade 2: Por categoria (cursos, resumos, leis primeiro)
-          const priorityTypes = ['video', 'resumo', 'lei', 'artigo'];
+          // Prioridade 2: Nova ordem - Livros -> Cursos -> Leis -> Outras
+          const priorityTypes = ['livro', 'video', 'lei', 'resumo', 'artigo', 'flashcard', 'audio', 'noticia', 'jusblog'];
           const aPriority = priorityTypes.indexOf(a.type);
           const bPriority = priorityTypes.indexOf(b.type);
           
