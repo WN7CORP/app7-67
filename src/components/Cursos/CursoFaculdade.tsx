@@ -156,8 +156,8 @@ export const CursoFaculdade = ({ onBack }: CursoFaculdadeProps) => {
         </div>
 
         <div className="p-4 max-w-4xl mx-auto">
-          {/* Player de Vídeo */}
-          <div className="mb-6">
+          {/* Player de Vídeo Otimizado */}
+          <div className="mb-6 -mx-4 sm:mx-0">
             <CursosVideoPlayer 
               videoUrl={selectedAula.video} 
               title={selectedAula.nome} 
