@@ -23,11 +23,12 @@ import { useFlashcardsData } from '@/hooks/useFlashcardsData';
 import FlashcardsDashboard from './FlashcardsDashboard';
 import StudyPlanCreator from './StudyPlanCreator';
 import { supabase } from '@/integrations/supabase/client';
-import ReactMarkdown from 'react-markdown';
+import { useNavigation } from '@/context/NavigationContext';
 
 type ViewMode = 'dashboard' | 'area' | 'categorias' | 'estudo' | 'review' | 'createPlan';
 
 const FlashcardsModern = () => {
+  const { setCurrentFunction } = useNavigation();
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
   const [selectedArea, setSelectedArea] = useState<string>('');
   const [selectedCategorias, setSelectedCategorias] = useState<string[]>([]);
@@ -90,7 +91,7 @@ const FlashcardsModern = () => {
   const handleConhecido = () => {
     const currentCard = flashcardsFiltrados[currentCardIndex];
     if (currentCard) {
-      updateFlashcardProgress(currentCard.id, 'conhecido');
+      updateFlashcardProgress(currentCard.id.toString(), 'conhecido');
       setSessionStats(prev => ({ correct: prev.correct + 1, total: prev.total + 1 }));
       proximoCard();
     }
@@ -99,7 +100,7 @@ const FlashcardsModern = () => {
   const handleRevisar = () => {
     const currentCard = flashcardsFiltrados[currentCardIndex];
     if (currentCard) {
-      updateFlashcardProgress(currentCard.id, 'revisar');
+      updateFlashcardProgress(currentCard.id.toString(), 'revisar');
       setSessionStats(prev => ({ correct: prev.correct, total: prev.total + 1 }));
       proximoCard();
     }
@@ -197,6 +198,21 @@ const FlashcardsModern = () => {
             exit={{ opacity: 0, y: -20 }}
             className="container mx-auto px-4 py-6"
           >
+            <div className="flex items-center justify-between mb-6">
+              <Button
+                variant="ghost"
+                onClick={() => setCurrentFunction(null)}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="h-5 w-5" />
+                <span>Início</span>
+              </Button>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                Flashcards Jurídicos
+              </h1>
+              <div className="w-20"></div>
+            </div>
+            
             <FlashcardsDashboard
               onStartStudy={iniciarEstudo}
               onCreatePlan={() => setViewMode('createPlan')}
@@ -254,10 +270,10 @@ const FlashcardsModern = () => {
             exit={{ opacity: 0, x: -300 }}
           >
             <StudyPlanCreator
-              onBack={voltarParaDashboard}
+              onBack={() => setCurrentFunction(null)}
               onPlanCreated={(plan) => {
                 createStudyPlan(plan);
-                voltarParaDashboard();
+                setCurrentFunction(null);
               }}
             />
           </motion.div>
@@ -274,13 +290,13 @@ const FlashcardsModern = () => {
             <div className="flex items-center justify-between mb-6">
               <Button
                 variant="ghost"
-                onClick={voltarParaDashboard}
+                onClick={() => setCurrentFunction(null)}
                 className="flex items-center space-x-2"
               >
                 <ArrowLeft className="h-5 w-5" />
-                <span>Voltar</span>
+                <span>Início</span>
               </Button>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                 Selecionar Área
               </h1>
               <div className="w-20"></div>
@@ -338,9 +354,20 @@ const FlashcardsModern = () => {
                 <ArrowLeft className="h-5 w-5" />
                 <span>Voltar</span>
               </Button>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                {selectedArea}
+            <div className="flex items-center justify-between mb-6">
+              <Button
+                variant="ghost"
+                onClick={() => setCurrentFunction(null)}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="h-5 w-5" />
+                <span>Início</span>
+              </Button>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                Criar Plano
               </h1>
+              <div className="w-20"></div>
+            </div>
               <div className="w-20"></div>
             </div>
 
@@ -499,17 +526,19 @@ const FlashcardsModern = () => {
                   <CardContent className="p-8">
                     <div className="text-center">
                       <Target className="h-12 w-12 mx-auto mb-4 text-primary" />
-                      <h3 className="text-xl font-semibold mb-4">Resposta</h3>
-                      <p className="text-lg leading-relaxed mb-6">
-                        {flashcardsFiltrados[currentCardIndex]?.resposta}
-                      </p>
+                      <h3 className="text-xl font-semibold mb-4 text-primary">Resposta</h3>
+                      <div className="text-base leading-relaxed mb-6 text-foreground bg-primary/5 p-4 rounded-lg border border-primary/20 min-h-[80px] flex items-center justify-center">
+                        <p className="text-center font-medium">
+                          {flashcardsFiltrados[currentCardIndex]?.resposta || 'Resposta não disponível'}
+                        </p>
+                      </div>
                       
                       {flashcardsFiltrados[currentCardIndex]?.exemplo && (
-                        <div className="bg-primary/5 rounded-lg p-4 mb-4">
+                        <div className="bg-primary/10 rounded-lg p-4 mb-4 border border-primary/20">
                           <h4 className="font-medium mb-2 text-primary">Exemplo Prático:</h4>
-                          <p className="text-sm leading-relaxed">
+                          <div className="text-sm leading-relaxed text-foreground">
                             {flashcardsFiltrados[currentCardIndex]?.exemplo}
-                          </p>
+                          </div>
                         </div>
                       )}
 
@@ -517,13 +546,13 @@ const FlashcardsModern = () => {
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="bg-secondary/50 rounded-lg p-4 mb-4"
+                          className="bg-secondary/30 rounded-lg p-4 mb-4 border border-secondary/40"
                         >
-                          <h4 className="font-medium mb-2 flex items-center">
+                          <h4 className="font-medium mb-2 flex items-center text-secondary-foreground">
                             <Lightbulb className="h-4 w-4 mr-2" />
-                            Dica:
+                            Dica IA:
                           </h4>
-                          <div className="text-sm leading-relaxed">
+                          <div className="text-sm leading-relaxed text-secondary-foreground">
                             {hint}
                           </div>
                         </motion.div>

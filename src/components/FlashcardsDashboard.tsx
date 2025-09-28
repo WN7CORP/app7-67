@@ -14,7 +14,9 @@ import {
   AlertCircle, 
   BarChart3,
   Play,
-  Plus
+  Plus,
+  Flame,
+  Eye
 } from 'lucide-react';
 import { useFlashcardsData } from '@/hooks/useFlashcardsData';
 

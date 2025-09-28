@@ -143,13 +143,13 @@ export const useFlashcardsData = () => {
   };
 
   // Atualizar progresso de um flashcard
-  const updateFlashcardProgress = (flashcardId: number, status: 'conhecido' | 'revisar', difficulty: 'facil' | 'medio' | 'dificil' = 'medio') => {
-    const existing = progress.find(p => p.flashcardId === flashcardId);
+  const updateFlashcardProgress = (flashcardId: string, status: 'conhecido' | 'revisar', difficulty: 'facil' | 'medio' | 'dificil' = 'medio') => {
+    const existing = progress.find(p => p.flashcardId.toString() === flashcardId);
     const newProgress = existing
       ? { ...existing, status, attempts: existing.attempts + 1, lastStudied: new Date(), difficulty }
-      : { flashcardId, status, attempts: 1, lastStudied: new Date(), difficulty };
+      : { flashcardId: parseInt(flashcardId), status, attempts: 1, lastStudied: new Date(), difficulty };
 
-    const updatedProgress = progress.filter(p => p.flashcardId !== flashcardId).concat(newProgress);
+    const updatedProgress = progress.filter(p => p.flashcardId.toString() !== flashcardId).concat(newProgress);
     saveProgress(updatedProgress);
   };
 
@@ -255,7 +255,13 @@ export const useFlashcardsData = () => {
 
   // Areas únicas
   const areas = useMemo(() => {
-    return [...new Set(flashcards.map(card => card.area))].filter(Boolean).sort();
+    const uniqueAreas = [...new Set(flashcards.map(card => card.area))].filter(Boolean).sort();
+    console.log('Áreas únicas encontradas:', uniqueAreas);
+    console.log('Total de flashcards:', flashcards.length);
+    if (flashcards.length > 0) {
+      console.log('Primeiros 3 flashcards áreas:', flashcards.slice(0, 3).map(f => f.area));
+    }
+    return uniqueAreas;
   }, [flashcards]);
 
   // Temas por área
