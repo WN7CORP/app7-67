@@ -12,7 +12,9 @@ interface FunctionSidebarProps {
 }
 
 export const FunctionSidebar = ({ config, className }: FunctionSidebarProps) => {
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(config.sections.map(section => section.title)) // Iniciar com todas as seções expandidas
+  );
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
   const toggleSection = (sectionTitle: string) => {

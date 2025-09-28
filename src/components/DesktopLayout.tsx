@@ -4,6 +4,7 @@ import { DesktopSidebar } from '@/components/DesktopSidebar';
 import { DesktopHeader } from '@/components/DesktopHeader';
 import { FooterMenu } from '@/components/FooterMenu';
 import { useNavigation } from '@/context/NavigationContext';
+import { GlobalProfessoraButton } from '@/components/GlobalProfessoraButton';
 
 
 interface DesktopLayoutProps {
@@ -37,7 +38,8 @@ export const DesktopLayout = ({ children }: DesktopLayoutProps) => {
         </main>
       </div>
 
-      {/* Professora IA Flutuante - removido do layout global */}
+      {/* Botão Global da Professora IA - apenas quando não há função ativa */}
+      {!currentFunction && <GlobalProfessoraButton />}
     </div>
   );
 };

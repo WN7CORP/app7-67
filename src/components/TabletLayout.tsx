@@ -2,6 +2,7 @@ import { ReactNode, useState } from 'react';
 import { DesktopSidebar } from '@/components/DesktopSidebar';
 import { MobileHeader } from '@/components/MobileHeader';
 import { FooterMenu } from '@/components/FooterMenu';
+import { GlobalProfessoraButton } from '@/components/GlobalProfessoraButton';
 
 interface TabletLayoutProps {
   children: ReactNode;
@@ -38,6 +39,9 @@ export const TabletLayout = ({ children }: TabletLayoutProps) => {
           </div>
         </main>
       </div>
+      
+      {/* Botão Global da Professora IA */}
+      <GlobalProfessoraButton />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { FunctionSidebar } from './FunctionSidebar';
 import { FunctionHeader } from './FunctionHeader';
 import { DesktopBreadcrumb } from './DesktopBreadcrumb';
 import { useDeviceDetection } from '@/hooks/useDeviceDetection';
+import { GlobalProfessoraButton } from '../GlobalProfessoraButton';
 
 interface DesktopFunctionLayoutProps {
   children: ReactNode;
@@ -77,11 +78,16 @@ export const DesktopFunctionLayout = ({
         
         {/* Conteúdo Principal */}
         <main className="flex-1 overflow-hidden">
-          <div className="h-full overflow-y-auto">
-            {children}
+          <div className="h-full overflow-y-auto bg-background/50">
+            <div className="max-w-5xl mx-auto px-4 py-4">
+              {children}
+            </div>
           </div>
         </main>
       </div>
+      
+      {/* Botão Global da Professora IA */}
+      <GlobalProfessoraButton />
     </div>
   );
 };

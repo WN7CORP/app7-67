@@ -138,9 +138,9 @@ export const BibliotecaEstudos = () => {
   }
 
   return (
-    <div className="fixed inset-0 bg-background">
-      {/* Header Consistente */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/30 h-14">
+    <div className="min-h-screen bg-background lg:h-full lg:min-h-0">
+      {/* Header - apenas no mobile */}
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/30 h-14 lg:hidden">
         <div className="flex items-center h-full px-4">
           <Button
             variant="ghost"
@@ -159,8 +159,12 @@ export const BibliotecaEstudos = () => {
       </div>
       
       {/* Conteúdo principal */}
-      <div className="pt-14 h-full overflow-y-auto">
-        <div className="container mx-auto px-4 py-6">
+      <div className="lg:h-full lg:overflow-y-auto" 
+           style={{ 
+             paddingBottom: isMobile ? '6rem' : '0',
+             height: isMobile ? 'calc(100vh - 3.5rem)' : 'auto'
+           }}>
+        <div className="w-full px-2 lg:px-0 py-2 lg:py-0">
           {/* Barra de busca global - só nas áreas */}
           {viewMode === 'areas' && (
             <div className="mb-8">
@@ -227,7 +231,6 @@ export const BibliotecaEstudos = () => {
           )}
         </div>
       </div>
-      
     </div>
   );
 };

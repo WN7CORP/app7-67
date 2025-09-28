@@ -33,10 +33,11 @@ export const ProfessoraIAFloatingButton = ({ onOpen }: ProfessoraIAFloatingButto
             onClick={onOpen}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-white/20"
+            className="px-4 py-2 h-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-white/20 flex items-center gap-2"
             size="sm"
           >
-            <Brain className="h-6 w-6 text-white" />
+            <span className="text-xl">🧑‍🏫</span>
+            <span className="text-white font-medium text-sm whitespace-nowrap">Falar com a professora</span>
           </Button>
         </motion.div>
         
@@ -50,7 +51,7 @@ export const ProfessoraIAFloatingButton = ({ onOpen }: ProfessoraIAFloatingButto
               exit={{ opacity: 0, y: 10, scale: 0.9 }}
               transition={{ duration: 0.2 }}
             >
-              Professora IA
+              Falar com a professora
               <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black/80"></div>
             </motion.div>
           )}

@@ -1,6 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { FooterMenu } from '@/components/FooterMenu';
 import { MobileHeader } from '@/components/MobileHeader';
+import { GlobalProfessoraButton } from '@/components/GlobalProfessoraButton';
 interface MobileLayoutProps {
   children: ReactNode;
 }
@@ -22,6 +23,7 @@ export const MobileLayout = ({
       {/* Bottom Navigation - responsivo */}
       <FooterMenu isVisible={!sidebarOpen} />
       
-      {/* Professora IA Flutuante - removido do layout global */}
+      {/* Botão Global da Professora IA */}
+      <GlobalProfessoraButton />
     </div>;
 };
