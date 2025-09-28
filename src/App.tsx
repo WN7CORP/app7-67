@@ -26,12 +26,20 @@ const App = () => (
             <NavigationProvider>
               <Toaster />
               <Sonner />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/reset-password" element={<ResetPasswordScreen />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+                <Routes>
+                  <Route path="/reset-password" element={<ResetPasswordScreen />} />
+                  <Route path="/" element={
+                    <ProtectedRoute>
+                      <Index />
+                    </ProtectedRoute>
+                  } />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={
+                    <ProtectedRoute>
+                      <NotFound />
+                    </ProtectedRoute>
+                  } />
+                </Routes>
               <AudioPlayerBar />
               <ProfessoraIAGlobal />
             </NavigationProvider>
