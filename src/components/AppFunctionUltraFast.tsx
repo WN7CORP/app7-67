@@ -30,6 +30,8 @@ import { Anotacoes } from '@/components/Anotacoes';
 import { ListaTarefas } from '@/components/ListaTarefas';
 import { Audioaulas } from '@/components/Audioaulas';
 import { ArtigoPorArtigo } from '@/components/ArtigoPorArtigo';
+import { Juriflix } from '@/components/Juriflix';
+import { IndicacoesLivros } from '@/components/IndicacoesLivros';
 
 // Componente de Header otimizado sem re-renders
 const FunctionHeader = memo(({ title, onBack }: { title: string; onBack: () => void }) => (
@@ -95,7 +97,10 @@ const COMPONENT_MAP = {
   'minhas anotações': Anotacoes,
   'loja': Loja,
   'artigo por artigo': ArtigoPorArtigo,
-  'artigos comentados': ArtigoPorArtigo
+  'artigos comentados': ArtigoPorArtigo,
+  'juriflix': Juriflix,
+  'indicações de livros': IndicacoesLivros,
+  'indicacoes de livros': IndicacoesLivros
 } as const;
 
 export const AppFunctionUltraFast = memo(() => {
