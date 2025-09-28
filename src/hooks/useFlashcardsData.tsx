@@ -55,6 +55,7 @@ export const useFlashcardsData = () => {
         const { data, error } = await (supabase as any)
           .from('FLASH-CARDS-FINAL')
           .select('id, area, tema, pergunta, resposta, exemplo')
+          .range(0, 99999)
           .order('area', { ascending: true })
           .order('tema', { ascending: true });
 

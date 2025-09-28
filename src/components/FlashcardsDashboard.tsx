@@ -179,26 +179,28 @@ const FlashcardsDashboard: React.FC<FlashcardsDashboardProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {Object.entries(metrics.areaPerformance).sort(([, a], [, b]) => b.conhecidos / b.total - a.conhecidos / a.total).slice(0, 5).map(([area, data]) => {
-              const accuracy = data.total > 0 ? Math.round(data.conhecidos / data.total * 100) : 0;
-              return <div key={area} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium truncate">{area}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">
-                            {data.conhecidos}/{data.total}
-                          </span>
-                          <Badge variant={accuracy >= 70 ? "default" : accuracy >= 50 ? "secondary" : "destructive"}>
-                            {accuracy}%
-                          </Badge>
+              {Object.entries(metrics.areaPerformance)
+                .sort(([, a], [, b]) => b.conhecidos / b.total - a.conhecidos / a.total)
+                .map(([area, data]) => {
+                const accuracy = data.total > 0 ? Math.round(data.conhecidos / data.total * 100) : 0;
+                return <div key={area} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium truncate">{area}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">
+                              {data.conhecidos}/{data.total}
+                            </span>
+                            <Badge variant={accuracy >= 70 ? "default" : accuracy >= 50 ? "secondary" : "destructive"}>
+                              {accuracy}%
+                            </Badge>
+                          </div>
                         </div>
-                      </div>
-                      <Progress value={accuracy} className="h-2" />
-                      <Button size="sm" variant="ghost" onClick={() => onStartStudy(area)} className="w-full text-xs">
-                        Estudar {area}
-                      </Button>
-                    </div>;
-            })}
+                        <Progress value={accuracy} className="h-2" />
+                        <Button size="sm" variant="ghost" onClick={() => onStartStudy(area)} className="w-full text-xs">
+                          Estudar {area}
+                        </Button>
+                      </div>;
+              })}
             </CardContent>
           </Card>
         </motion.div>

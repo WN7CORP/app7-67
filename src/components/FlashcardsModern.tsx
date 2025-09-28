@@ -482,84 +482,44 @@ const FlashcardsModern = () => {
 
             <motion.div
               key={currentCardIndex}
-              initial={{ rotateY: 0 }}
-              animate={{ rotateY: isFlipped ? 180 : 0 }}
-              transition={{ duration: 0.6 }}
-              className="perspective-1000"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.02 }}
             >
               <Card 
-                className="min-h-[400px] cursor-pointer shadow-xl preserve-3d relative bg-gradient-to-br from-card to-card/80"
+                className="min-h-[360px] cursor-pointer shadow-lg border-primary/20 bg-gradient-to-br from-card to-primary/5"
                 onClick={virarCard}
               >
-                <div className={`absolute inset-0 backface-hidden ${isFlipped ? 'rotate-y-180' : ''}`}>
-                  <CardHeader className="text-center border-b">
-                    <Badge variant="outline" className="w-fit mx-auto mb-2">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-center">
+                    <Badge variant="outline" className="border-primary/30 text-primary">
                       {flashcardsFiltrados[currentCardIndex]?.area}
                     </Badge>
-                    <Badge variant="secondary" className="w-fit mx-auto bg-primary/20 text-primary">
+                    <Badge variant="secondary" className="bg-primary/10 text-primary">
                       {flashcardsFiltrados[currentCardIndex]?.tema}
                     </Badge>
-                  </CardHeader>
-                  <CardContent className="flex items-center justify-center p-8">
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="min-h-[220px] flex items-center justify-center p-6">
                     <div className="text-center">
-                      <BookOpen className="h-12 w-12 mx-auto mb-4 text-primary" />
-                      <h3 className="text-xl font-semibold mb-2">Pergunta</h3>
-                      <p className="text-lg leading-relaxed">
-                        {flashcardsFiltrados[currentCardIndex]?.pergunta}
+                      <p className="text-lg leading-relaxed mb-4">
+                        {isFlipped 
+                          ? (flashcardsFiltrados[currentCardIndex]?.resposta || 'Resposta não disponível')
+                          : (flashcardsFiltrados[currentCardIndex]?.pergunta || 'Pergunta não disponível')}
                       </p>
-                      <p className="text-sm text-muted-foreground mt-4">
-                        Clique para ver a resposta
-                      </p>
-                    </div>
-                  </CardContent>
-                </div>
-
-                <div className={`absolute inset-0 backface-hidden rotate-y-180 ${isFlipped ? 'rotate-y-0' : ''}`}>
-                  <CardHeader className="text-center border-b">
-                    <Badge variant="outline" className="w-fit mx-auto mb-2">
-                      {flashcardsFiltrados[currentCardIndex]?.area}
-                    </Badge>
-                    <Badge variant="secondary" className="w-fit mx-auto bg-primary/20 text-primary">
-                      {flashcardsFiltrados[currentCardIndex]?.tema}
-                    </Badge>
-                  </CardHeader>
-                  <CardContent className="p-8">
-                    <div className="text-center">
-                      <Target className="h-12 w-12 mx-auto mb-4 text-primary" />
-                      <h3 className="text-xl font-semibold mb-4 text-primary">Resposta</h3>
-                      <div className="text-base leading-relaxed mb-6 text-foreground bg-primary/5 p-4 rounded-lg border border-primary/20 min-h-[80px] flex items-center justify-center">
-                        <p className="text-center font-medium">
-                          {flashcardsFiltrados[currentCardIndex]?.resposta || 'Resposta não disponível'}
-                        </p>
-                      </div>
-                      
-                      {flashcardsFiltrados[currentCardIndex]?.exemplo && (
-                        <div className="bg-primary/10 rounded-lg p-4 mb-4 border border-primary/20">
-                          <h4 className="font-medium mb-2 text-primary">Exemplo Prático:</h4>
-                          <div className="text-sm leading-relaxed text-foreground">
-                            {flashcardsFiltrados[currentCardIndex]?.exemplo}
-                          </div>
+                      {isFlipped && flashcardsFiltrados[currentCardIndex]?.exemplo && (
+                        <div className="mt-4 p-3 bg-muted rounded-lg">
+                          <p className="text-sm text-muted-foreground font-medium">Exemplo:</p>
+                          <p className="text-sm mt-1">{flashcardsFiltrados[currentCardIndex]?.exemplo}</p>
                         </div>
                       )}
-
-                      {showHint && hint && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="bg-secondary/30 rounded-lg p-4 mb-4 border border-secondary/40"
-                        >
-                          <h4 className="font-medium mb-2 flex items-center text-secondary-foreground">
-                            <Lightbulb className="h-4 w-4 mr-2" />
-                            Dica IA:
-                          </h4>
-                          <div className="text-sm leading-relaxed text-secondary-foreground">
-                            {hint}
-                          </div>
-                        </motion.div>
+                      {!isFlipped && (
+                        <p className="text-sm text-muted-foreground mt-2">Toque para ver a resposta</p>
                       )}
                     </div>
-                  </CardContent>
-                </div>
+                  </div>
+                </CardContent>
               </Card>
             </motion.div>
 
