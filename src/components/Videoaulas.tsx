@@ -36,16 +36,36 @@ export const Videoaulas = () => {
   const fetchVideos = async () => {
     try {
       setLoading(true);
+      console.log('Iniciando busca de vídeos...');
       
-      const { data, error } = await supabase.functions.invoke('youtube-api', {
-        body: { 
-          action: 'getVideosFromDatabase'
-        }
-      });
+      // Primeiro, buscar diretamente da tabela sem a API do YouTube
+      const { data: videosData, error: videosError } = await supabase
+        .from('VIDEOS')
+        .select('*')
+        .order('area');
 
-      if (error) throw error;
+      if (videosError) {
+        console.error('Erro ao buscar vídeos da tabela:', videosError);
+        throw videosError;
+      }
+
+      console.log('Vídeos encontrados:', videosData?.length);
       
-      setVideos(data.videos || []);
+      // Mapear os dados sem enriquecer com YouTube por enquanto
+      const mappedVideos = videosData?.map(video => ({
+        ...video,
+        youtube: {
+          id: extractVideoId(video.link) || '',
+          title: `${video.area} - Vídeo ${video.id}`,
+          description: '',
+          thumbnail: getYouTubeThumbnail(video.link),
+          duration: '',
+          publishedAt: '',
+          channelTitle: 'YouTube'
+        }
+      })) || [];
+      
+      setVideos(mappedVideos);
     } catch (err) {
       console.error('Erro ao carregar vídeos:', err);
     } finally {
@@ -63,6 +83,31 @@ export const Videoaulas = () => {
 
   const openVideo = (url: string) => {
     window.open(url, '_blank');
+  };
+
+  const extractVideoId = (url: string): string | null => {
+    if (!url) return null;
+    
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+      /(?:youtube\.com\/watch\?.*v=)([a-zA-Z0-9_-]{11})/,
+      /^([a-zA-Z0-9_-]{11})$/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    
+    return null;
+  };
+
+  const getYouTubeThumbnail = (url: string): string => {
+    const videoId = extractVideoId(url);
+    if (videoId) {
+      return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    }
+    return '/placeholder.svg';
   };
 
   // Agrupar vídeos por área
