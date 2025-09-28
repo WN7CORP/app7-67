@@ -4,34 +4,25 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { motion } from 'framer-motion';
-import { 
-  TrendingUp, 
-  Calendar, 
-  Clock, 
-  Target, 
-  BookOpen, 
-  CheckCircle, 
-  AlertCircle, 
-  BarChart3,
-  Play,
-  Plus,
-  Flame,
-  Eye
-} from 'lucide-react';
+import { TrendingUp, Calendar, Clock, Target, BookOpen, CheckCircle, AlertCircle, BarChart3, Play, Plus } from 'lucide-react';
 import { useFlashcardsData } from '@/hooks/useFlashcardsData';
-
 interface FlashcardsDashboardProps {
   onStartStudy: (area?: string, temas?: string[]) => void;
   onCreatePlan: () => void;
   onViewReview: () => void;
 }
-
 const FlashcardsDashboard: React.FC<FlashcardsDashboardProps> = ({
   onStartStudy,
   onCreatePlan,
   onViewReview
 }) => {
-  const { metrics, cardsForReview, areas, sessions, studyPlans } = useFlashcardsData();
+  const {
+    metrics,
+    cardsForReview,
+    areas,
+    sessions,
+    studyPlans
+  } = useFlashcardsData();
   const activePlan = studyPlans.find(p => p.isActive);
 
   // Sessões da última semana
@@ -40,19 +31,17 @@ const FlashcardsDashboard: React.FC<FlashcardsDashboardProps> = ({
     weekAgo.setDate(weekAgo.getDate() - 7);
     return s.date >= weekAgo;
   }).slice(0, 5);
-
-  return (
-    <div className="space-y-6 pb-24">
+  return <div className="space-y-6 pb-24">
       {/* Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center space-y-4"
-      >
+      <motion.div initial={{
+      opacity: 0,
+      y: -20
+    }} animate={{
+      opacity: 1,
+      y: 0
+    }} className="text-center space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            Flashcards Jurídicos
-          </h1>
+          
           <div className="flex space-x-2">
             <Button onClick={onCreatePlan} variant="outline" size="sm" className="border-primary/30">
               <Plus className="h-4 w-4 mr-2" />
@@ -67,12 +56,15 @@ const FlashcardsDashboard: React.FC<FlashcardsDashboardProps> = ({
       </motion.div>
 
       {/* Métricas Principais */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
-      >
+      <motion.div initial={{
+      opacity: 0,
+      y: 20
+    }} animate={{
+      opacity: 1,
+      y: 0
+    }} transition={{
+      delay: 0.1
+    }} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -123,12 +115,15 @@ const FlashcardsDashboard: React.FC<FlashcardsDashboardProps> = ({
       </motion.div>
 
       {/* Plano de Estudo Ativo */}
-      {activePlan && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
+      {activePlan && <motion.div initial={{
+      opacity: 0,
+      y: 20
+    }} animate={{
+      opacity: 1,
+      y: 0
+    }} transition={{
+      delay: 0.5
+    }}>
           <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -141,16 +136,12 @@ const FlashcardsDashboard: React.FC<FlashcardsDashboardProps> = ({
                 <div>
                   <p className="text-sm text-muted-foreground">Áreas</p>
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {activePlan.areas.slice(0, 3).map(area => (
-                      <Badge key={area} variant="secondary" className="text-xs">
+                    {activePlan.areas.slice(0, 3).map(area => <Badge key={area} variant="secondary" className="text-xs">
                         {area}
-                      </Badge>
-                    ))}
-                    {activePlan.areas.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
+                      </Badge>)}
+                    {activePlan.areas.length > 3 && <Badge variant="outline" className="text-xs">
                         +{activePlan.areas.length - 3}
-                      </Badge>
-                    )}
+                      </Badge>}
                   </div>
                 </div>
                 <div>
@@ -162,24 +153,24 @@ const FlashcardsDashboard: React.FC<FlashcardsDashboardProps> = ({
                   <p className="text-lg font-semibold">{activePlan.weeklyGoal} cards</p>
                 </div>
               </div>
-              <Button 
-                onClick={() => onStartStudy(activePlan.areas[0], activePlan.temas)}
-                className="mt-4"
-              >
+              <Button onClick={() => onStartStudy(activePlan.areas[0], activePlan.temas)} className="mt-4">
                 Continuar Plano
               </Button>
             </CardContent>
           </Card>
-        </motion.div>
-      )}
+        </motion.div>}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Performance por Área */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.6
+      }}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -188,13 +179,9 @@ const FlashcardsDashboard: React.FC<FlashcardsDashboardProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {Object.entries(metrics.areaPerformance)
-                .sort(([,a], [,b]) => (b.conhecidos / b.total) - (a.conhecidos / a.total))
-                .slice(0, 5)
-                .map(([area, data]) => {
-                  const accuracy = data.total > 0 ? Math.round((data.conhecidos / data.total) * 100) : 0;
-                  return (
-                    <div key={area} className="space-y-2">
+              {Object.entries(metrics.areaPerformance).sort(([, a], [, b]) => b.conhecidos / b.total - a.conhecidos / a.total).slice(0, 5).map(([area, data]) => {
+              const accuracy = data.total > 0 ? Math.round(data.conhecidos / data.total * 100) : 0;
+              return <div key={area} className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium truncate">{area}</span>
                         <div className="flex items-center gap-2">
@@ -207,27 +194,25 @@ const FlashcardsDashboard: React.FC<FlashcardsDashboardProps> = ({
                         </div>
                       </div>
                       <Progress value={accuracy} className="h-2" />
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => onStartStudy(area)}
-                        className="w-full text-xs"
-                      >
+                      <Button size="sm" variant="ghost" onClick={() => onStartStudy(area)} className="w-full text-xs">
                         Estudar {area}
                       </Button>
-                    </div>
-                  );
-                })}
+                    </div>;
+            })}
             </CardContent>
           </Card>
         </motion.div>
 
         {/* Sessões Recentes */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.7
+      }}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -236,10 +221,8 @@ const FlashcardsDashboard: React.FC<FlashcardsDashboardProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {recentSessions.length > 0 ? (
-                <div className="space-y-3">
-                  {recentSessions.map((session) => (
-                    <div key={session.id} className="p-3 bg-muted/50 rounded-lg">
+              {recentSessions.length > 0 ? <div className="space-y-3">
+                  {recentSessions.map(session => <div key={session.id} className="p-3 bg-muted/50 rounded-lg">
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="font-medium text-sm">{session.area}</p>
@@ -250,7 +233,7 @@ const FlashcardsDashboard: React.FC<FlashcardsDashboardProps> = ({
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-medium">
-                            {Math.round((session.correctAnswers / session.totalCards) * 100)}%
+                            {Math.round(session.correctAnswers / session.totalCards * 100)}%
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {session.duration}min
@@ -265,34 +248,29 @@ const FlashcardsDashboard: React.FC<FlashcardsDashboardProps> = ({
                           {session.correctAnswers}/{session.totalCards} cards
                         </Badge>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
+                    </div>)}
+                </div> : <div className="text-center py-8 text-muted-foreground">
                   <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">Nenhuma sessão recente</p>
-                  <Button 
-                    size="sm" 
-                    onClick={() => onStartStudy()}
-                    className="mt-2"
-                  >
+                  <Button size="sm" onClick={() => onStartStudy()} className="mt-2">
                     Começar a estudar
                   </Button>
-                </div>
-              )}
+                </div>}
             </CardContent>
           </Card>
         </motion.div>
       </div>
 
       {/* Cards para Revisão Rápida */}
-      {cardsForReview.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-        >
+      {cardsForReview.length > 0 && <motion.div initial={{
+      opacity: 0,
+      y: 20
+    }} animate={{
+      opacity: 1,
+      y: 0
+    }} transition={{
+      delay: 0.8
+    }}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -302,8 +280,7 @@ const FlashcardsDashboard: React.FC<FlashcardsDashboardProps> = ({
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {cardsForReview.slice(0, 6).map((card) => (
-                  <div key={card.id} className="p-3 border rounded-lg bg-orange-50/50 dark:bg-orange-950/10 border-orange-200 dark:border-orange-800">
+                {cardsForReview.slice(0, 6).map(card => <div key={card.id} className="p-3 border rounded-lg bg-orange-50/50 dark:bg-orange-950/10 border-orange-200 dark:border-orange-800">
                     <div className="space-y-2">
                       <div className="flex gap-1">
                         <Badge variant="outline" className="text-xs border-orange-300 text-orange-700 dark:border-orange-700 dark:text-orange-300">
@@ -315,22 +292,16 @@ const FlashcardsDashboard: React.FC<FlashcardsDashboardProps> = ({
                         {card.tema}
                       </Badge>
                     </div>
-                  </div>
-                ))}
+                  </div>)}
               </div>
-              {cardsForReview.length > 6 && (
-                <div className="mt-4 text-center">
+              {cardsForReview.length > 6 && <div className="mt-4 text-center">
                   <Button onClick={onViewReview} variant="outline">
                     Ver todos os {cardsForReview.length} cards para revisão
                   </Button>
-                </div>
-              )}
+                </div>}
             </CardContent>
           </Card>
-        </motion.div>
-      )}
-    </div>
-  );
+        </motion.div>}
+    </div>;
 };
-
 export default FlashcardsDashboard;
