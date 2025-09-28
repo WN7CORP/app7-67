@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 export const DesktopHeader = () => {
   return (
     <>
-      <header data-desktop-header className="fixed top-0 right-0 left-72 h-20 bg-background/95 backdrop-blur-sm border-b border-border z-30">
+      <header data-desktop-header className="h-20 bg-background/95 backdrop-blur-sm border-b border-border flex-shrink-0">
         <div className="flex items-center justify-between h-full px-6">
           <div className="flex items-center gap-4">
-            {/* Espaço reservado para logo ou título */}
+            <h1 className="text-xl font-semibold text-foreground">Dashboard</h1>
           </div>
           
           <div className="flex items-center gap-3">

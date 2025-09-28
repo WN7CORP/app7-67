@@ -1,7 +1,16 @@
 import React, { memo, useCallback, useMemo } from 'react';
 import { useNavigation } from '@/context/NavigationContext';
+import { useDeviceDetection } from '@/hooks/useDeviceDetection';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+
+// Imports desktop layouts
+import { VideoaulasDesktop } from '@/components/desktop/VideoaulasDesktop';
+import { BibliotecaDesktop } from '@/components/desktop/BibliotecaDesktop';
+import { VadeMecumDesktop } from '@/components/desktop/VadeMecumDesktop';
+import { FlashcardsDesktop } from '@/components/desktop/FlashcardsDesktop';
+import { ResumosDesktop } from '@/components/desktop/ResumosDesktop';
+import { MapasMentaisDesktop } from '@/components/desktop/MapasMentaisDesktop';
 
 // Imports diretos otimizados
 import { Downloads } from '@/components/Downloads';
@@ -45,6 +54,21 @@ const FunctionHeader = memo(({ title, onBack }: { title: string; onBack: () => v
   </div>
 ));
 FunctionHeader.displayName = 'FunctionHeader';
+
+// Mapa de componentes para desktop com layout específico
+const DESKTOP_COMPONENT_MAP = {
+  'videoaulas': VideoaulasDesktop,
+  'biblioteca de estudos': BibliotecaDesktop,
+  'vade mecum': VadeMecumDesktop,
+  'vade mecum digital': VadeMecumDesktop,
+  'vade-mecum': VadeMecumDesktop,
+  'flashcards': FlashcardsDesktop,
+  'flashcard': FlashcardsDesktop,
+  'resumos jurídicos': ResumosDesktop,
+  'resumos juridicos': ResumosDesktop,
+  'mapas mentais': MapasMentaisDesktop,
+  'mapa mental': MapasMentaisDesktop,
+} as const;
 
 // Mapa de componentes para máxima performance
 const COMPONENT_MAP = {
@@ -109,6 +133,7 @@ const COMPONENT_MAP = {
 
 export const AppFunctionUltraFast = memo(() => {
   const { currentFunction, setCurrentFunction } = useNavigation();
+  const { isDesktop } = useDeviceDetection();
 
   const handleBack = useCallback(() => {
     setCurrentFunction(null);
@@ -124,7 +149,20 @@ export const AppFunctionUltraFast = memo(() => {
   const ComponentToRender = useMemo(() => {
     if (!normalizedFunction) return null;
 
-    // Busca direta no mapa primeiro (mais rápido)
+    // Para desktop, verificar primeiro se há versão desktop específica
+    if (isDesktop) {
+      const desktopMatch = DESKTOP_COMPONENT_MAP[normalizedFunction as keyof typeof DESKTOP_COMPONENT_MAP];
+      if (desktopMatch) return desktopMatch;
+
+      // Busca por inclusão de termos para desktop
+      for (const [key, component] of Object.entries(DESKTOP_COMPONENT_MAP)) {
+        if (normalizedFunction.includes(key)) {
+          return component;
+        }
+      }
+    }
+
+    // Busca padrão no mapa geral
     const directMatch = COMPONENT_MAP[normalizedFunction as keyof typeof COMPONENT_MAP];
     if (directMatch) return directMatch;
 
@@ -136,7 +174,7 @@ export const AppFunctionUltraFast = memo(() => {
     }
 
     return null;
-  }, [normalizedFunction]);
+  }, [normalizedFunction, isDesktop]);
 
   if (!currentFunction) {
     return null;
