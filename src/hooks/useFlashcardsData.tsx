@@ -52,16 +52,27 @@ export const useFlashcardsData = () => {
   useEffect(() => {
     const loadFlashcards = async () => {
       try {
-        const { data, error } = await supabase
-          .from('FLASHCARDS')
-          .select('*')
+        const { data, error } = await (supabase as any)
+          .from('FLASH-CARDS-FINAL')
+          .select('id, area, tema, pergunta, resposta, exemplo')
           .order('area', { ascending: true })
           .order('tema', { ascending: true });
 
         if (error) throw error;
         console.log('Flashcards carregados:', data?.length || 0);
         console.log('Áreas encontradas:', [...new Set(data?.map(f => f.area) || [])]);
-        setFlashcards(data || []);
+        
+        // Mapear os dados para o formato esperado
+        const mappedData = data?.map(item => ({
+          id: item.id,
+          area: item.area || '',
+          tema: item.tema || '',
+          pergunta: item.pergunta || '',
+          resposta: item.resposta || '',
+          exemplo: item.exemplo || ''
+        })) || [];
+        
+        setFlashcards(mappedData);
       } catch (error) {
         console.error('Erro ao carregar flashcards:', error);
         toast({
