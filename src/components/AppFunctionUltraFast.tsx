@@ -19,6 +19,7 @@ import { Videoaulas } from '@/components/Videoaulas';
 import { CursosPreparatorios } from '@/components/CursosPreparatorios';
 import { NoticiasJuridicas } from '@/components/NoticiasJuridicas';
 import { BancoQuestoes } from '@/components/BancoQuestoes';
+import { SimuladosOAB } from '@/components/SimuladosOAB';
 import Flashcards from '@/components/Flashcards';
 import BloggerJuridico from '@/components/BloggerJuridico';
 import { AssistenteIA } from '@/components/AssistenteIA';
@@ -75,6 +76,9 @@ const COMPONENT_MAP = {
   'biblioteca exame da ordem - oab': BibliotecaExameOAB,
   'banco de questões': BancoQuestoes,
   'banco questoes': BancoQuestoes,
+  'simulados oab': SimuladosOAB,
+  'simulados da oab': SimuladosOAB,
+  'simulado oab': SimuladosOAB,
   'flashcards': Flashcards,
   'flashcard': Flashcards,
   'blog jurídico': BloggerJuridico,

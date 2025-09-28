@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Target, ExternalLink } from 'lucide-react';
+import { ArrowLeft, GraduationCap, ExternalLink } from 'lucide-react';
 import { useNavigation } from '@/context/NavigationContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
-export const BancoQuestoes = () => {
+export const SimuladosOAB = () => {
   const { setCurrentFunction } = useNavigation();
   const [link, setLink] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -16,7 +16,7 @@ export const BancoQuestoes = () => {
         const { data, error } = await (supabase as any)
           .from('APP')
           .select('link')
-          .eq('funcao', 'Banco de Questões')
+          .eq('funcao', 'Simulados OAB')
           .single();
 
         if (error) throw error;
@@ -72,7 +72,7 @@ export const BancoQuestoes = () => {
             Voltar
           </Button>
           <h1 className="ml-4 text-lg font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            Banco de Questões
+            Simulados OAB
           </h1>
         </div>
       </div>
@@ -81,10 +81,10 @@ export const BancoQuestoes = () => {
       <div className="pt-16 pb-8 px-4">
         <div className="max-w-2xl mx-auto text-center">
           <div className="mb-8">
-            <Target className="h-16 w-16 mx-auto mb-4 text-primary" />
-            <h2 className="text-3xl font-bold mb-4">Banco de Questões</h2>
+            <GraduationCap className="h-16 w-16 mx-auto mb-4 text-primary" />
+            <h2 className="text-3xl font-bold mb-4">Simulados OAB</h2>
             <p className="text-muted-foreground text-lg mb-8">
-              Pratique com milhares de questões comentadas organizadas por assunto e prepare-se para concursos públicos
+              Prepare-se com simulados realistas do Exame da OAB com correção detalhada e questões atualizadas
             </p>
           </div>
 
@@ -96,7 +96,7 @@ export const BancoQuestoes = () => {
               className="w-full max-w-md h-14 text-lg"
             >
               <ExternalLink className="h-5 w-5 mr-2" />
-              Acessar Banco de Questões
+              Acessar Simulados OAB
             </Button>
             
             <p className="text-sm text-muted-foreground">
@@ -107,31 +107,31 @@ export const BancoQuestoes = () => {
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             <div className="space-y-2">
               <div className="h-12 w-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                <Target className="h-6 w-6 text-primary" />
+                <GraduationCap className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="font-semibold">Questões Comentadas</h3>
+              <h3 className="font-semibold">Questões Atualizadas</h3>
               <p className="text-sm text-muted-foreground">
-                Explicações detalhadas para cada resposta
+                Baseadas nos últimos exames da OAB
               </p>
             </div>
             
             <div className="space-y-2">
               <div className="h-12 w-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                <Target className="h-6 w-6 text-primary" />
+                <GraduationCap className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="font-semibold">Filtros Avançados</h3>
+              <h3 className="font-semibold">Correção Detalhada</h3>
               <p className="text-sm text-muted-foreground">
-                Organize por área, dificuldade e concurso
+                Explicações completas para cada questão
               </p>
             </div>
             
             <div className="space-y-2">
               <div className="h-12 w-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                <Target className="h-6 w-6 text-primary" />
+                <GraduationCap className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="font-semibold">Estatísticas</h3>
+              <h3 className="font-semibold">Ambiente Realista</h3>
               <p className="text-sm text-muted-foreground">
-                Acompanhe seu progresso e desempenho
+                Simule as condições reais do exame
               </p>
             </div>
           </div>
