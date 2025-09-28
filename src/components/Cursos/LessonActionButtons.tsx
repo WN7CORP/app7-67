@@ -2,21 +2,20 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, Brain, HelpCircle, Download, Loader2 } from 'lucide-react';
 import { useLessonContent, type LessonData } from '@/hooks/useLessonContent';
+import { useLessonPDFExport } from '@/hooks/useLessonPDFExport';
 import { LessonSummaryModal } from './LessonSummaryModal';
 import { FlashcardsViewer } from './FlashcardsViewer';
 import { QuizViewer } from './QuizViewer';
+import ProfessoraIA from '../ProfessoraIA';
+
 interface LessonActionButtonsProps {
   lesson: LessonData;
 }
-export const LessonActionButtons = ({
-  lesson
-}: LessonActionButtonsProps) => {
-  const {
-    loading,
-    generateContent,
-    exportToPDF
-  } = useLessonContent();
+export const LessonActionButtons = ({ lesson }: LessonActionButtonsProps) => {
+  const { loading, generateContent, exportToPDF } = useLessonContent();
+  const { exportLessonSummary, exporting } = useLessonPDFExport();
   const [activeModal, setActiveModal] = useState<'summary' | 'flashcards' | 'quiz' | null>(null);
+  const [showProfessora, setShowProfessora] = useState(false);
   const [content, setContent] = useState<any>(null);
   const handleGenerateContent = async (type: 'summary' | 'flashcards' | 'quiz') => {
     const generatedContent = await generateContent(lesson, type);
@@ -26,42 +25,90 @@ export const LessonActionButtons = ({
     }
   };
   const handleExportPDF = async () => {
-    if (content && activeModal) {
+    if (content && activeModal === 'summary') {
+      await exportLessonSummary(content, lesson);
+    } else if (content && activeModal) {
       await exportToPDF(lesson, content, activeModal);
     }
   };
   return <>
-      <div className="grid grid-cols-3 gap-3 mt-6">
-        <Button onClick={() => handleGenerateContent('summary')} disabled={loading} variant="outline" className="flex items-center gap-2 h-auto py-3 px-4 text-sm">
+      <div className="flex flex-wrap gap-3 mt-6">
+        <Button 
+          onClick={() => handleGenerateContent('summary')} 
+          disabled={loading} 
+          variant="outline" 
+          className="flex items-center gap-2"
+        >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-          <span className="hidden sm:inline">Baixar</span>
-          
-          <br className="hidden sm:block" />
-          <span className="text-xs text-muted-foreground">Resumo</span>
+          {loading ? 'Gerando...' : 'Resumo'}
         </Button>
 
-        <Button onClick={() => handleGenerateContent('flashcards')} disabled={loading} variant="outline" className="flex items-center gap-2 h-auto py-3 px-4 text-sm">
+        <Button 
+          onClick={() => handleGenerateContent('flashcards')} 
+          disabled={loading} 
+          variant="outline" 
+          className="flex items-center gap-2"
+        >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4" />}
-          <span className="hidden sm:inline">Baixar</span>
-          
-          <br className="hidden sm:block" />
-          <span className="text-xs text-muted-foreground">Flashcards</span>
+          {loading ? 'Gerando...' : 'Flashcards'}
         </Button>
 
-        <Button onClick={() => handleGenerateContent('quiz')} disabled={loading} variant="outline" className="flex items-center gap-2 h-auto py-3 px-4 text-sm">
+        <Button 
+          onClick={() => handleGenerateContent('quiz')} 
+          disabled={loading} 
+          variant="outline" 
+          className="flex items-center gap-2"
+        >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <HelpCircle className="h-4 w-4" />}
-          <span className="hidden sm:inline">Baixar</span>
-          
-          <br className="hidden sm:block" />
-          <span className="text-xs text-muted-foreground">Questões</span>
+          {loading ? 'Gerando...' : 'Quiz'}
+        </Button>
+
+        {/* Botão Minimalista da Professora - Só Ícone de Cérebro */}
+        <Button 
+          onClick={() => setShowProfessora(true)}
+          variant="outline" 
+          size="icon"
+          className="w-10 h-10 rounded-full bg-purple-500/10 border-purple-500/30 hover:bg-purple-500/20"
+          title="Falar com a professora sobre esta aula"
+        >
+          <Brain className="h-4 w-4 text-purple-600" />
         </Button>
       </div>
 
       {/* Modais */}
-      <LessonSummaryModal isOpen={activeModal === 'summary'} onClose={() => setActiveModal(null)} content={content} lesson={lesson} onExportPDF={handleExportPDF} />
+      <LessonSummaryModal 
+        isOpen={activeModal === 'summary'} 
+        onClose={() => setActiveModal(null)} 
+        content={content} 
+        lesson={lesson} 
+        onExportPDF={handleExportPDF} 
+      />
 
-      <FlashcardsViewer isOpen={activeModal === 'flashcards'} onClose={() => setActiveModal(null)} content={content} lesson={lesson} onExportPDF={handleExportPDF} />
+      <FlashcardsViewer 
+        isOpen={activeModal === 'flashcards'} 
+        onClose={() => setActiveModal(null)} 
+        content={content} 
+        lesson={lesson} 
+        onExportPDF={handleExportPDF} 
+      />
 
-      <QuizViewer isOpen={activeModal === 'quiz'} onClose={() => setActiveModal(null)} content={content} lesson={lesson} onExportPDF={handleExportPDF} />
+      <QuizViewer 
+        isOpen={activeModal === 'quiz'} 
+        onClose={() => setActiveModal(null)} 
+        content={content} 
+        lesson={lesson} 
+        onExportPDF={handleExportPDF} 
+      />
+
+      {/* Professora IA Modal */}
+      <ProfessoraIA 
+        video={{
+          title: lesson.assunto,
+          area: lesson.area,
+          channelTitle: 'Cursos Preparatórios'
+        }} 
+        isOpen={showProfessora} 
+        onClose={() => setShowProfessora(false)} 
+      />
     </>;
 };

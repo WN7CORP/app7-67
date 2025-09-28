@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, X } from 'lucide-react';
-
+import { ArrowLeft, X, Brain } from 'lucide-react';
 import { BotaoAudioRelaxante } from '@/components/BotaoAudioRelaxante';
 import { motion } from 'framer-motion';
 
@@ -180,9 +179,9 @@ export const BibliotecaLeitor = ({ livro, onClose }: BibliotecaLeitorProps) => {
             className="flex items-center gap-3 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
           >
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-              👩‍🏫
+              <Brain className="h-4 w-4" />
             </div>
-            Falar com a professora
+            Perguntar sobre o livro
           </Button>
         </div>
       </div>

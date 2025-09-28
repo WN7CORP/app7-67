@@ -48,7 +48,7 @@ export const CursosPreparatorios = () => {
         </div>
       </div>
 
-      {/* Hero Section */}
+      {/* Hero Section Minimalista */}
       <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-secondary/5 border-b">
         <div className="p-8 text-center">
           <h2 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
@@ -57,21 +57,6 @@ export const CursosPreparatorios = () => {
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
             Escolha o curso que melhor se adequa ao seu nível de conhecimento e objetivos de estudo
           </p>
-          
-          <div className="flex items-center justify-center gap-8 mb-8">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary">3</div>
-              <div className="text-sm text-muted-foreground">Modalidades</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-blue-500">500+</div>
-              <div className="text-sm text-muted-foreground">Videoaulas</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-500">100%</div>
-              <div className="text-sm text-muted-foreground">Gratuito</div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -214,41 +199,6 @@ export const CursosPreparatorios = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
-        
-        {/* Features Section */}
-        <div className="mt-12 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-2xl p-8">
-          <h3 className="text-2xl font-bold text-center mb-8">O que você terá acesso</h3>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                <BookOpen className="h-6 w-6 text-primary" />
-              </div>
-              <h4 className="font-semibold mb-2">Videoaulas HD</h4>
-              <p className="text-sm text-muted-foreground">Aulas em alta qualidade com áudio cristalino</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Clock className="h-6 w-6 text-primary" />
-              </div>
-              <h4 className="font-semibold mb-2">Acesso 24h</h4>
-              <p className="text-sm text-muted-foreground">Estude no seu ritmo, quando quiser</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-              <h4 className="font-semibold mb-2">Suporte IA</h4>
-              <p className="text-sm text-muted-foreground">Professora IA para tirar suas dúvidas</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                <FileText className="h-6 w-6 text-primary" />
-              </div>
-              <h4 className="font-semibold mb-2">Material Extra</h4>
-              <p className="text-sm text-muted-foreground">PDFs e materiais de apoio</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

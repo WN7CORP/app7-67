@@ -24,7 +24,7 @@ export const LessonSummaryModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent data-lesson-modal="summary" className="max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent data-lesson-modal="summary" className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">{/* // Corrigido problema de scroll */}
         <DialogHeader className="flex flex-row items-center justify-between pb-4 border-b">
           <div className="flex-1">
             <DialogTitle className="text-xl font-bold">{content.titulo}</DialogTitle>
@@ -43,8 +43,8 @@ export const LessonSummaryModal = ({
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4">
-          <div className="space-y-6 py-4">
+        <ScrollArea className="flex-1 overflow-y-auto max-h-[70vh]">
+          <div className="space-y-6 py-4 pr-4">{/* // Garantindo scroll correto */}
             {/* Introdução */}
             <section>
               <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
