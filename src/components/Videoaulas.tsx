@@ -1,155 +1,112 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Play, Search, Clock, Eye } from 'lucide-react';
+import { ArrowLeft, Play, Search } from 'lucide-react';
 import { useNavigation } from '@/context/NavigationContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { VideoPlayerEnhanced } from '@/components/VideoPlayerEnhanced';
+import type { YouTubePlaylist } from '@/hooks/useYouTube';
 
-interface VideoData {
+interface DBVideoRow {
   id: number;
   area: string;
   link: string;
-  youtube?: {
-    id: string;
-    title: string;
-    description: string;
-    thumbnail: string;
-    duration: string;
-    publishedAt: string;
-    channelTitle: string;
-  };
+}
+
+interface PlaylistCard extends DBVideoRow {
+  playlistId?: string | null;
+  meta?: YouTubePlaylist;
 }
 
 export const Videoaulas = () => {
   const { setCurrentFunction } = useNavigation();
-  const [videos, setVideos] = useState<VideoData[]>([]);
+  const [items, setItems] = useState<PlaylistCard[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedArea, setSelectedArea] = useState<string>('');
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState<{ area: string; playlist: YouTubePlaylist } | null>(null);
 
   useEffect(() => {
-    fetchVideos();
+    loadPlaylists();
   }, []);
 
-  const fetchVideos = async () => {
+  const handleBack = () => {
+    if (selected) {
+      setSelected(null);
+      return;
+    }
+    setCurrentFunction(null);
+  };
+
+  const loadPlaylists = async () => {
     try {
       setLoading(true);
-      console.log('Iniciando busca de vídeos...');
-      
-      // Primeiro, buscar diretamente da tabela sem a API do YouTube
-      const { data: videosData, error: videosError } = await supabase
+      const { data, error } = await supabase
         .from('VIDEOS')
-        .select('*')
+        .select('id, area, link')
         .order('area');
 
-      if (videosError) {
-        console.error('Erro ao buscar vídeos da tabela:', videosError);
-        throw videosError;
-      }
+      if (error) throw error;
 
-      console.log('Vídeos encontrados:', videosData?.length);
-      
-      // Mapear os dados sem enriquecer com YouTube por enquanto
-      const mappedVideos = videosData?.map(video => ({
-        ...video,
-        youtube: {
-          id: extractVideoId(video.link) || '',
-          title: `${video.area} - Vídeo ${video.id}`,
-          description: '',
-          thumbnail: getYouTubeThumbnail(video.link),
-          duration: '',
-          publishedAt: '',
-          channelTitle: 'YouTube'
-        }
-      })) || [];
-      
-      setVideos(mappedVideos);
-    } catch (err) {
-      console.error('Erro ao carregar vídeos:', err);
+      const base: PlaylistCard[] = (data || []).map((row) => ({
+        ...row,
+        playlistId: extractPlaylistId(row.link),
+      }));
+
+      // Buscar metadados no YouTube (playlist ou vídeo único)
+      const enriched = await Promise.all(
+        base.map(async (row) => {
+          try {
+            if (row.playlistId) {
+              const { data: payload, error: fnError } = await supabase.functions.invoke('youtube-api', {
+                body: { action: 'getPlaylistDetails', playlistId: row.playlistId },
+              });
+              if (fnError) throw fnError;
+              return { ...row, meta: payload as YouTubePlaylist };
+            } else {
+              // Link pode ser vídeo único - criar playlist com 1 item
+              const videoId = extractVideoId(row.link);
+              if (!videoId) return row; // sem como enriquecer
+              const { data: videoData, error: fnError } = await supabase.functions.invoke('youtube-api', {
+                body: { action: 'getVideoDetails', videoId },
+              });
+              if (fnError) throw fnError;
+              const v = videoData as any;
+              const playlistLike: YouTubePlaylist = {
+                id: v.id,
+                title: v.title,
+                description: v.description || '',
+                thumbnail: v.thumbnail,
+                videos: [v],
+              } as YouTubePlaylist;
+              return { ...row, meta: playlistLike };
+            }
+          } catch (e) {
+            console.error('Falha ao enriquecer item', row.id, e);
+            return row;
+          }
+        })
+      );
+
+      setItems(enriched);
+    } catch (e) {
+      console.error('Erro ao carregar playlists:', e);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBack = () => {
-    if (selectedArea) {
-      setSelectedArea('');
-    } else {
-      setCurrentFunction(null);
-    }
-  };
+  const filtered = useMemo(() => {
+    const term = search.toLowerCase().trim();
+    if (!term) return items;
+    return items.filter((it) =>
+      it.area?.toLowerCase().includes(term) || it.meta?.title?.toLowerCase().includes(term)
+    );
+  }, [items, search]);
 
-  const openVideo = (url: string) => {
-    window.open(url, '_blank');
-  };
-
-  const extractVideoId = (url: string): string | null => {
-    if (!url) return null;
-    
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
-      /(?:youtube\.com\/watch\?.*v=)([a-zA-Z0-9_-]{11})/,
-      /^([a-zA-Z0-9_-]{11})$/
-    ];
-    
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match) return match[1];
-    }
-    
-    return null;
-  };
-
-  const getYouTubeThumbnail = (url: string): string => {
-    const videoId = extractVideoId(url);
-    if (videoId) {
-      return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-    }
-    return '/placeholder.svg';
-  };
-
-  // Agrupar vídeos por área
-  const videosByArea = useMemo(() => {
-    const grouped: { [key: string]: VideoData[] } = {};
-    
-    videos.forEach(video => {
-      if (!grouped[video.area]) {
-        grouped[video.area] = [];
-      }
-      grouped[video.area].push(video);
-    });
-    
-    return grouped;
-  }, [videos]);
-
-  // Filtrar áreas por busca
-  const filteredAreas = useMemo(() => {
-    if (!searchTerm) return videosByArea;
-    
-    const filtered: { [key: string]: VideoData[] } = {};
-    Object.entries(videosByArea).forEach(([area, areaVideos]) => {
-      if (area.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          areaVideos.some(video => 
-            video.youtube?.title?.toLowerCase().includes(searchTerm.toLowerCase())
-          )) {
-        filtered[area] = areaVideos;
-      }
-    });
-    
-    return filtered;
-  }, [videosByArea, searchTerm]);
-
-  // Vídeos da área selecionada
-  const selectedAreaVideos = useMemo(() => {
-    if (!selectedArea) return [];
-    return videosByArea[selectedArea]?.filter(video =>
-      !searchTerm || video.youtube?.title?.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
-  }, [selectedArea, videosByArea, searchTerm]);
-
-  if (loading) {
+  // Player dentro do app
+  if (selected) {
     return (
       <div className="min-h-screen bg-background">
         <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/30 h-14">
@@ -158,22 +115,15 @@ export const Videoaulas = () => {
               <ArrowLeft className="h-5 w-5" strokeWidth={3} />
               Voltar
             </Button>
-            <h1 className="ml-4 text-lg font-semibold">Videoaulas</h1>
+            <h1 className="ml-4 text-lg font-semibold">{selected.area}</h1>
           </div>
         </div>
-        
-        <div className="p-4">
-          <div className="grid grid-cols-2 gap-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <div className="aspect-video bg-muted rounded-t-lg" />
-                <CardContent className="p-3">
-                  <div className="h-4 bg-muted rounded w-3/4" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+
+        <VideoPlayerEnhanced
+          video={{ area: selected.area }}
+          playlist={selected.playlist}
+          onBack={() => setSelected(null)}
+        />
       </div>
     );
   }
@@ -192,153 +142,109 @@ export const Videoaulas = () => {
             <ArrowLeft className="h-5 w-5" strokeWidth={3} />
             Voltar
           </Button>
-          <h1 className="ml-4 text-lg font-semibold">
-            {selectedArea || 'Videoaulas'}
-          </h1>
+          <h1 className="ml-4 text-lg font-semibold">Videoaulas</h1>
         </div>
       </div>
-      
-      {/* Content */}
+
       <div className="p-4 space-y-4">
-        {/* Search */}
+        {/* Busca */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder={selectedArea ? "Buscar vídeos..." : "Buscar áreas..."}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Buscar playlists..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
           />
         </div>
 
-        {!selectedArea ? (
-          // Áreas Grid
+        {/* Grid - 2 por linha */}
+        {loading ? (
           <div className="grid grid-cols-2 gap-3">
-            {Object.entries(filteredAreas).map(([area, areaVideos]) => {
-              const firstVideo = areaVideos[0];
-              const thumbnail = firstVideo?.youtube?.thumbnail || '/placeholder.svg';
-              
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <div className="aspect-video bg-muted rounded-t-lg" />
+                <CardContent className="p-3">
+                  <div className="h-4 bg-muted rounded w-3/4" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {filtered.map((item) => {
+              const thumb = item.meta?.thumbnail || '/placeholder.svg';
+              const count = item.meta?.videos?.length || 0;
               return (
                 <Card
-                  key={area}
+                  key={item.id}
                   className="group cursor-pointer overflow-hidden border-2 hover:border-primary/50 transition-all duration-300"
-                  onClick={() => setSelectedArea(area)}
+                  onClick={() => item.meta && setSelected({ area: item.area, playlist: item.meta })}
                 >
                   <div className="relative aspect-video bg-muted overflow-hidden">
                     <img
-                      src={thumbnail}
-                      alt={area}
+                      src={thumb}
+                      alt={item.meta?.title || item.area}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.src = '/placeholder.svg';
                       }}
                     />
-                    
                     <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
-                    
-                    {/* Badge com contagem */}
+
                     <div className="absolute top-2 left-2">
-                      <Badge className="bg-red-600/90 text-white text-xs">
-                        {areaVideos.length} vídeo{areaVideos.length !== 1 ? 's' : ''}
-                      </Badge>
+                      <Badge className="bg-black/80 text-white text-xs">{count} vídeos</Badge>
                     </div>
-                    
-                    {/* Play button */}
+
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-12 h-12 bg-red-600/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform backdrop-blur-sm">
                         <Play className="h-6 w-6 text-white ml-0.5" />
                       </div>
                     </div>
                   </div>
-                  
+
                   <CardContent className="p-3">
                     <h3 className="font-medium text-sm leading-tight line-clamp-2 group-hover:text-primary transition-colors">
-                      {area}
+                      {item.meta?.title || item.area}
                     </h3>
+                    <p className="text-xs text-muted-foreground line-clamp-1">{item.area}</p>
                   </CardContent>
                 </Card>
               );
             })}
           </div>
-        ) : (
-          // Vídeos da área selecionada
-          <div className="grid grid-cols-2 gap-3">
-            {selectedAreaVideos.map((video) => (
-              <Card
-                key={video.id}
-                className="group cursor-pointer overflow-hidden border-2 hover:border-primary/50 transition-all duration-300"
-                onClick={() => openVideo(video.link)}
-              >
-                <div className="relative aspect-video bg-muted overflow-hidden">
-                  <img
-                    src={video.youtube?.thumbnail || '/placeholder.svg'}
-                    alt={video.youtube?.title || `Vídeo ${video.id}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/placeholder.svg';
-                    }}
-                  />
-                  
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors" />
-                  
-                  {/* Duration badge */}
-                  {video.youtube?.duration && (
-                    <div className="absolute bottom-2 right-2">
-                      <Badge className="bg-black/80 text-white text-xs">
-                        {video.youtube.duration}
-                      </Badge>
-                    </div>
-                  )}
-                  
-                  {/* Play button */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-12 h-12 bg-red-600/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform backdrop-blur-sm">
-                      <Play className="h-6 w-6 text-white ml-0.5" />
-                    </div>
-                  </div>
-                </div>
-                
-                <CardContent className="p-3">
-                  <h3 className="font-medium text-sm leading-tight line-clamp-2 group-hover:text-primary transition-colors mb-1">
-                    {video.youtube?.title || `Vídeo ${video.id}`}
-                  </h3>
-                  
-                  {video.youtube?.channelTitle && (
-                    <p className="text-xs text-muted-foreground line-clamp-1">
-                      {video.youtube.channelTitle}
-                    </p>
-                  )}
-                  
-                  <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                    {video.youtube?.duration && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {video.youtube.duration}
-                      </span>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         )}
 
-        {/* Mensagem quando não há resultados */}
-        {((selectedArea && selectedAreaVideos.length === 0) || 
-          (!selectedArea && Object.keys(filteredAreas).length === 0)) && (
+        {/* Vazio */}
+        {!loading && filtered.length === 0 && (
           <Card className="text-center p-8">
             <h3 className="font-semibold mb-2">Nenhum resultado encontrado</h3>
-            <p className="text-muted-foreground text-sm">
-              {searchTerm 
-                ? "Tente buscar por outro termo."
-                : "Não há vídeos disponíveis no momento."
-              }
-            </p>
+            <p className="text-muted-foreground text-sm">Não há vídeos disponíveis no momento.</p>
           </Card>
         )}
       </div>
     </div>
   );
 };
+
+// Helpers
+function extractVideoId(url: string): string | null {
+  if (!url) return null;
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /(?:youtube\.com\/watch\?.*v=)([a-zA-Z0-9_-]{11})/,
+    /^([a-zA-Z0-9_-]{11})$/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+function extractPlaylistId(url: string): string | null {
+  if (!url) return null;
+  const m = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : null;
+}
