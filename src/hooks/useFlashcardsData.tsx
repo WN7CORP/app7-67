@@ -55,9 +55,12 @@ export const useFlashcardsData = () => {
         const { data, error } = await supabase
           .from('FLASHCARDS')
           .select('*')
-          .order('id');
+          .order('area', { ascending: true })
+          .order('tema', { ascending: true });
 
         if (error) throw error;
+        console.log('Flashcards carregados:', data?.length || 0);
+        console.log('Áreas encontradas:', [...new Set(data?.map(f => f.area) || [])]);
         setFlashcards(data || []);
       } catch (error) {
         console.error('Erro ao carregar flashcards:', error);

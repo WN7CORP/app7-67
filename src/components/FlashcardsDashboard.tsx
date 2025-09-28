@@ -14,7 +14,7 @@ import {
   AlertCircle, 
   BarChart3,
   Play,
-  Settings
+  Plus
 } from 'lucide-react';
 import { useFlashcardsData } from '@/hooks/useFlashcardsData';
 
@@ -40,118 +40,85 @@ const FlashcardsDashboard: React.FC<FlashcardsDashboardProps> = ({
   }).slice(0, 5);
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="space-y-6 pb-24">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-primary">Dashboard de Estudos</h1>
-          <p className="text-muted-foreground mt-1">Acompanhe seu progresso e performance</p>
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center space-y-4"
+      >
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            Flashcards Jurídicos
+          </h1>
+          <div className="flex space-x-2">
+            <Button onClick={onCreatePlan} variant="outline" size="sm" className="border-primary/30">
+              <Plus className="h-4 w-4 mr-2" />
+              Criar Plano
+            </Button>
+            <Button onClick={() => onStartStudy()} size="sm" className="bg-primary hover:bg-primary/90">
+              <Play className="h-4 w-4 mr-2" />
+              Estudar Agora
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={onCreatePlan} variant="outline" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Criar Plano
-          </Button>
-          <Button onClick={() => onStartStudy()} className="flex items-center gap-2">
-            <Play className="h-4 w-4" />
-            Estudar Agora
-          </Button>
-        </div>
-      </div>
+      </motion.div>
 
       {/* Métricas Principais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total de Cards</p>
-                  <p className="text-2xl font-bold text-blue-800 dark:text-blue-200">{metrics.totalCards}</p>
-                </div>
-                <BookOpen className="h-8 w-8 text-blue-500" />
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+      >
+        <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total de Cards</p>
+                <p className="text-3xl font-bold text-primary">{metrics.totalCards}</p>
               </div>
-              <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-2">
-                {metrics.studiedCards} estudados
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
+              <BookOpen className="h-8 w-8 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border-green-200 dark:border-green-800">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-600 dark:text-green-400">Precisão</p>
-                  <p className="text-2xl font-bold text-green-800 dark:text-green-200">{metrics.accuracy}%</p>
-                </div>
-                <Target className="h-8 w-8 text-green-500" />
+        <Card className="bg-gradient-to-br from-green-500/5 to-green-500/10 border-green-500/20">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Precisão</p>
+                <p className="text-3xl font-bold text-green-600">{metrics.accuracy}%</p>
               </div>
-              <p className="text-xs text-green-600/70 dark:text-green-400/70 mt-2">
-                {metrics.conhecidos} acertos
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
+              <Target className="h-8 w-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950/20 dark:to-orange-900/20 border-orange-200 dark:border-orange-800">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-orange-600 dark:text-orange-400">Para Revisar</p>
-                  <p className="text-2xl font-bold text-orange-800 dark:text-orange-200">{cardsForReview.length}</p>
-                </div>
-                <AlertCircle className="h-8 w-8 text-orange-500" />
+        <Card className="bg-gradient-to-br from-orange-500/5 to-orange-500/10 border-orange-500/20">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Para Revisar</p>
+                <p className="text-3xl font-bold text-orange-600">{cardsForReview.length}</p>
               </div>
-              {cardsForReview.length > 0 && (
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={onViewReview}
-                  className="text-xs text-orange-600 hover:text-orange-700 mt-2 p-0 h-auto"
-                >
-                  Revisar agora
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
+              <AlertCircle className="h-8 w-8 text-orange-600" />
+            </div>
+          </CardContent>
+        </Card>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Card className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950/20 dark:to-purple-900/20 border-purple-200 dark:border-purple-800">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Sequência</p>
-                  <p className="text-2xl font-bold text-purple-800 dark:text-purple-200">{metrics.streak}</p>
-                </div>
-                <Calendar className="h-8 w-8 text-purple-500" />
+        <Card className="bg-gradient-to-br from-red-500/5 to-red-500/10 border-red-500/20">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Sequência</p>
+                <p className="text-3xl font-bold text-red-600">{metrics.streak}</p>
               </div>
-              <p className="text-xs text-purple-600/70 dark:text-purple-400/70 mt-2">
-                dias consecutivos
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+              <Calendar className="h-8 w-8 text-red-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Plano de Estudo Ativo */}
       {activePlan && (
