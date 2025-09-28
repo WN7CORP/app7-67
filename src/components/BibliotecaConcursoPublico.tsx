@@ -224,7 +224,7 @@ export const BibliotecaConcursoPublico = () => {
                 >
                   <BibliotecaProfissoes
                     livrosPorProfissao={livrosPorProfissao}
-                    profissoes={profissoes}
+                    profissoes={profissoes as string[]}
                     onProfissaoClick={handleProfissaoClick}
                   />
                 </motion.div>
@@ -251,14 +251,20 @@ export const BibliotecaConcursoPublico = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      {livrosPorProfissao[selectedProfissao]?.livros
-                        .reduce((areas: string[], livro) => {
-                          if (livro['Área'] && !areas.includes(livro['Área'])) {
-                            areas.push(livro['Área']);
-                          }
-                          return areas;
-                        }, [])
+                      {(
+                        (livrosPorProfissao[selectedProfissao]?.livros?.length
+                          ? livrosPorProfissao[selectedProfissao]!.livros
+                          : livros.filter(l => l['Profissões']?.toLowerCase().includes(selectedProfissao.toLowerCase()))
+                        )
+                          .reduce((areas: string[], livro) => {
+                            if (livro['Área'] && !areas.includes(livro['Área'])) {
+                              areas.push(livro['Área']);
+                            }
+                            return areas;
+                          }, [] as string[])
+                      )
                         .map((area, index) => (
+
                           <motion.div
                             key={area}
                             initial={{ opacity: 0, y: 20 }}

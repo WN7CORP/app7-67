@@ -81,7 +81,11 @@ export const useLivrosPorProfissao = () => {
     return acc;
   }, {} as Record<string, { livros: LivroJuridico[], area: string, capa: string | null }>) || {};
 
-  const profissoes = Object.keys(livrosPorProfissao).sort();
+  const profissoes = Array.from(new Set((livros || []).flatMap(l => (l['Profissões'] || '')
+    .split(',')
+    .map(p => p.trim())
+    .filter(p => p && !p.toLowerCase().includes('oab'))
+  ))).sort();
 
   return {
     livrosPorProfissao,
