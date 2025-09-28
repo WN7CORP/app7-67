@@ -3,16 +3,17 @@ import { useOptimizedQuery } from './useOptimizedQuery';
 
 interface LivroJuridico {
   id: number;
-  imagem: string;
-  livro: string;
-  autor?: string;
-  area: string;
-  sobre?: string;
-  link?: string;
-  download?: string;
-  Profissões?: string;
-  'profissões-area'?: string;
-  'capa-profissao'?: string;
+  'Área': string;
+  'Profissões': string;
+  'Ordem': string;
+  'Tema': string;
+  'Download': string;
+  'Link': string;
+  'Capa-area': string;
+  'Capa-livro': string;
+  'Sobre': string;
+  'profissões-area': string;
+  'capa-profissao': string;
 }
 
 export const useBibliotecaConcursoPublico = () => {
@@ -20,11 +21,11 @@ export const useBibliotecaConcursoPublico = () => {
     queryKey: ['biblioteca-concurso-publico'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('BIBLIOTECA-JURIDICA')
+        .from('BIBILIOTECA-CONCURSO')
         .select('*')
         .not('Profissões', 'is', null)
         .not('Profissões', 'eq', '')
-        .order('id', { ascending: true });
+        .order('Ordem', { ascending: true });
 
       if (error) {
         console.error('Erro ao buscar biblioteca concurso público:', error);
@@ -45,8 +46,8 @@ export const useLivrosPorProfissao = () => {
 
   // Criar uma estrutura para organizar por profissões
   const livrosPorProfissao = livros?.reduce((acc, livro) => {
-    if (livro.Profissões) {
-      const profissoes = livro.Profissões.split(',').map(p => p.trim());
+    if (livro['Profissões']) {
+      const profissoes = livro['Profissões'].split(',').map(p => p.trim());
       const profissoesArea = livro['profissões-area']?.split(',').map(p => p.trim()) || [];
       const capas = livro['capa-profissao']?.split(',').map(p => p.trim()) || [];
       
@@ -58,7 +59,7 @@ export const useLivrosPorProfissao = () => {
             let capaEspecifica = capas[index] || null;
             
             // Se não encontrar capa específica, procurar por uma capa que contenha o nome da profissão
-            if (!capaEspecifica && livro.imagem) {
+            if (!capaEspecifica && livro['Capa-livro']) {
               const nomeSimplificado = profissao.toLowerCase()
                 .replace(/\s+/g, '')
                 .replace(/[áàâã]/g, 'a')
@@ -68,21 +69,21 @@ export const useLivrosPorProfissao = () => {
                 .replace(/[úù]/g, 'u')
                 .replace(/ç/g, 'c');
               
-              if (livro.imagem.toLowerCase().includes(nomeSimplificado) || 
-                  livro.imagem.toLowerCase().includes(profissao.toLowerCase())) {
-                capaEspecifica = livro.imagem;
+              if (livro['Capa-livro'].toLowerCase().includes(nomeSimplificado) || 
+                  livro['Capa-livro'].toLowerCase().includes(profissao.toLowerCase())) {
+                capaEspecifica = livro['Capa-livro'];
               }
             }
             
             acc[profissao] = {
               livros: [],
               area: profissoesArea[index] || profissao,
-              capa: capaEspecifica
+              capa: capaEspecifica || livro['Capa-area']
             };
           }
           
           // Se ainda não tem capa e esta é uma imagem relacionada, usar ela
-          if (!acc[profissao].capa && livro.imagem) {
+          if (!acc[profissao].capa && livro['Capa-livro']) {
             const nomeSimplificado = profissao.toLowerCase()
               .replace(/\s+/g, '')
               .replace(/[áàâã]/g, 'a')
@@ -92,9 +93,9 @@ export const useLivrosPorProfissao = () => {
               .replace(/[úù]/g, 'u')
               .replace(/ç/g, 'c');
             
-            if (livro.imagem.toLowerCase().includes(nomeSimplificado) || 
-                livro.imagem.toLowerCase().includes(profissao.toLowerCase())) {
-              acc[profissao].capa = livro.imagem;
+            if (livro['Capa-livro'].toLowerCase().includes(nomeSimplificado) || 
+                livro['Capa-livro'].toLowerCase().includes(profissao.toLowerCase())) {
+              acc[profissao].capa = livro['Capa-livro'];
             }
           }
           

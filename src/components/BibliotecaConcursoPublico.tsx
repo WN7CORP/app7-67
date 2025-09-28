@@ -6,8 +6,8 @@ import { ArrowLeft, BookOpen, Search, Loader2 } from 'lucide-react';
 import { useNavigation } from '@/context/NavigationContext';
 import { useLivrosPorProfissao } from '@/hooks/useBibliotecaConcursoPublico';
 import { BibliotecaProfissoes } from './BibliotecaProfissoes';
-import { BibliotecaLista } from './BibliotecaLista';
-import { BibliotecaLeitor } from './BibliotecaLeitor';
+import { StandardBibliotecaLista } from './StandardBibliotecaLista';
+import { StandardBibliotecaLeitor } from './StandardBibliotecaLeitor';
 import { SearchPreviewBar } from './SearchPreviewBar';
 import { JuridicalBookCard } from './JuridicalBookCard';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,16 +15,17 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 interface LivroJuridico {
   id: number;
-  imagem: string;
-  livro: string;
-  autor?: string;
-  area: string;
-  sobre?: string;
-  link?: string;
-  download?: string;
-  Profissões?: string;
-  'profissões-area'?: string;
-  'capa-profissao'?: string;
+  'Área': string;
+  'Profissões': string;
+  'Ordem': string;
+  'Tema': string;
+  'Download': string;
+  'Link': string;
+  'Capa-area': string;
+  'Capa-livro': string;
+  'Sobre': string;
+  'profissões-area': string;
+  'capa-profissao': string;
 }
 
 type ViewMode = 'profissoes' | 'areas' | 'lista' | 'leitor' | 'busca';
@@ -89,7 +90,7 @@ export const BibliotecaConcursoPublico = () => {
       case 'lista':
         return selectedArea || 'Lista de Livros';
       case 'leitor':
-        return selectedBook?.livro || 'Leitor';
+        return selectedBook?.['Tema'] || 'Leitor';
       case 'busca':
         return `Busca: "${searchTerm}"`;
       default:
@@ -100,11 +101,10 @@ export const BibliotecaConcursoPublico = () => {
   // Filtrar livros por busca global
   const filteredBooks = searchTerm
     ? livros.filter(livro => 
-        livro.livro.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        livro.area.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (livro.autor && livro.autor.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (livro.sobre && livro.sobre.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (livro.Profissões && livro.Profissões.toLowerCase().includes(searchTerm.toLowerCase()))
+        livro['Tema'].toLowerCase().includes(searchTerm.toLowerCase()) ||
+        livro['Área'].toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (livro['Sobre'] && livro['Sobre'].toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (livro['Profissões'] && livro['Profissões'].toLowerCase().includes(searchTerm.toLowerCase()))
       )
     : [];
 
@@ -142,8 +142,19 @@ export const BibliotecaConcursoPublico = () => {
   if (viewMode === 'leitor' && selectedBook) {
     return (
       <AnimatePresence mode="wait">
-        <BibliotecaLeitor
-          livro={selectedBook}
+        <StandardBibliotecaLeitor
+          livro={{
+            id: selectedBook.id,
+            livro: selectedBook['Tema'],
+            autor: '',
+            area: selectedBook['Área'],
+            sobre: selectedBook['Sobre'],
+            link: selectedBook['Link'],
+            download: selectedBook['Download'],
+            imagem: selectedBook['Capa-livro'],
+            'capa-area': selectedBook['Capa-area'],
+            'capa-livro': selectedBook['Capa-livro']
+          }}
           onClose={handleBack}
         />
       </AnimatePresence>
@@ -182,10 +193,10 @@ export const BibliotecaConcursoPublico = () => {
               <SearchPreviewBar
                 placeholder="Buscar em toda a biblioteca..."
                 data={livros}
-                searchFields={['Profissões', 'livro', 'autor', 'area']}
+                searchFields={['Profissões', 'Tema', 'Área']}
                 onItemClick={(livro) => {
-                  if (livro.Profissões) {
-                    const primeiraProfissao = livro.Profissões.split(',')[0].trim();
+                  if (livro['Profissões']) {
+                    const primeiraProfissao = livro['Profissões'].split(',')[0].trim();
                     if (!primeiraProfissao.toLowerCase().includes('oab')) {
                       handleProfissaoClick(primeiraProfissao);
                     }
@@ -242,8 +253,8 @@ export const BibliotecaConcursoPublico = () => {
                     >
                       {livrosPorProfissao[selectedProfissao]?.livros
                         .reduce((areas: string[], livro) => {
-                          if (livro.area && !areas.includes(livro.area)) {
-                            areas.push(livro.area);
+                          if (livro['Área'] && !areas.includes(livro['Área'])) {
+                            areas.push(livro['Área']);
                           }
                           return areas;
                         }, [])
@@ -265,7 +276,7 @@ export const BibliotecaConcursoPublico = () => {
                                   </div>
                                   <div className="absolute top-2 right-2">
                                     <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm">
-                                      {livrosPorProfissao[selectedProfissao]?.livros.filter(l => l.area === area).length} livros
+                                      {livrosPorProfissao[selectedProfissao]?.livros.filter(l => l['Área'] === area).length} livros
                                     </Badge>
                                   </div>
                                 </div>
@@ -291,11 +302,28 @@ export const BibliotecaConcursoPublico = () => {
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <BibliotecaLista
+                  <StandardBibliotecaLista
                     area={selectedArea}
-                    livros={livrosPorProfissao[selectedProfissao]?.livros.filter(l => l.area === selectedArea) || []}
+                    livros={livrosPorProfissao[selectedProfissao]?.livros.filter(l => l['Área'] === selectedArea).map(l => ({
+                      id: l.id,
+                      livro: l['Tema'],
+                      autor: '',
+                      area: l['Área'],
+                      sobre: l['Sobre'],
+                      link: l['Link'],
+                      download: l['Download'],
+                      imagem: l['Capa-livro'],
+                      'capa-area': l['Capa-area'],
+                      'capa-livro': l['Capa-livro']
+                    })) || []}
                     onBack={handleBack}
-                    onBookClick={handleBookClick}
+                    onBookClick={(livro) => {
+                      // Encontrar o livro original para manter a estrutura completa
+                      const livroOriginal = livrosPorProfissao[selectedProfissao]?.livros.find(l => l.id === livro.id);
+                      if (livroOriginal) {
+                        handleBookClick(livroOriginal);
+                      }
+                    }}
                   />
                 </motion.div>
               )}
@@ -337,7 +365,16 @@ export const BibliotecaConcursoPublico = () => {
                             transition={{ duration: 0.3 }}
                           >
                             <JuridicalBookCard 
-                              livro={livro} 
+                              livro={{
+                                id: livro.id,
+                                livro: livro['Tema'],
+                                autor: '',
+                                area: livro['Área'],
+                                sobre: livro['Sobre'],
+                                link: livro['Link'],
+                                download: livro['Download'],
+                                imagem: livro['Capa-livro']
+                              }} 
                               showAreaBadge={true}
                               onClick={() => handleBookClick(livro)}
                             />
