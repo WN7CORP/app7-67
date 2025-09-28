@@ -1011,6 +1011,51 @@ export type Database = {
           },
         ]
       }
+      "BIBILIOTECA-CONCURSO": {
+        Row: {
+          Área: string | null
+          "Capa-area": string | null
+          "Capa-livro": string | null
+          "capa-profissao": string | null
+          Download: string | null
+          id: number
+          Link: string | null
+          Ordem: string | null
+          Profissões: string | null
+          "profissões-area": string | null
+          Sobre: string | null
+          Tema: string | null
+        }
+        Insert: {
+          Área?: string | null
+          "Capa-area"?: string | null
+          "Capa-livro"?: string | null
+          "capa-profissao"?: string | null
+          Download?: string | null
+          id?: number
+          Link?: string | null
+          Ordem?: string | null
+          Profissões?: string | null
+          "profissões-area"?: string | null
+          Sobre?: string | null
+          Tema?: string | null
+        }
+        Update: {
+          Área?: string | null
+          "Capa-area"?: string | null
+          "Capa-livro"?: string | null
+          "capa-profissao"?: string | null
+          Download?: string | null
+          id?: number
+          Link?: string | null
+          Ordem?: string | null
+          Profissões?: string | null
+          "profissões-area"?: string | null
+          Sobre?: string | null
+          Tema?: string | null
+        }
+        Relationships: []
+      }
       "BIBILIOTECA-NOVA-490": {
         Row: {
           Área: string | null
@@ -1085,6 +1130,7 @@ export type Database = {
           area: string | null
           autor: string | null
           beneficios: string | null
+          "Capa-area": string | null
           download: string | null
           id: number
           imagem: string | null
@@ -1096,6 +1142,7 @@ export type Database = {
           area?: string | null
           autor?: string | null
           beneficios?: string | null
+          "Capa-area"?: string | null
           download?: string | null
           id?: number
           imagem?: string | null
@@ -1107,6 +1154,7 @@ export type Database = {
           area?: string | null
           autor?: string | null
           beneficios?: string | null
+          "Capa-area"?: string | null
           download?: string | null
           id?: number
           imagem?: string | null
@@ -1151,36 +1199,6 @@ export type Database = {
           livro?: string | null
           Profissões?: string | null
           "profissões-area"?: string | null
-          sobre?: string | null
-        }
-        Relationships: []
-      }
-      "BIBLIOTECA-JURIDICA-IA-ESTUDOS": {
-        Row: {
-          area: string | null
-          download: string | null
-          id: number
-          imagem: string | null
-          link: string | null
-          livro: string | null
-          sobre: string | null
-        }
-        Insert: {
-          area?: string | null
-          download?: string | null
-          id?: number
-          imagem?: string | null
-          link?: string | null
-          livro?: string | null
-          sobre?: string | null
-        }
-        Update: {
-          area?: string | null
-          download?: string | null
-          id?: number
-          imagem?: string | null
-          link?: string | null
-          livro?: string | null
           sobre?: string | null
         }
         Relationships: []
@@ -6638,6 +6656,10 @@ export type Database = {
       }
       is_admin_user: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_user_admin: {
+        Args: { user_uuid: string }
         Returns: boolean
       }
       log_admin_action: {
