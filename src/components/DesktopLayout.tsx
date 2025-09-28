@@ -17,29 +17,27 @@ export const DesktopLayout = ({ children }: DesktopLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Desktop Sidebar - apenas quando não há função ativa */}
-      {!currentFunction && (
-        <DesktopSidebar 
-          collapsed={sidebarCollapsed} 
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
-        />
-      )}
+      {/* Desktop Sidebar - sempre visível */}
+      <DesktopSidebar 
+        collapsed={sidebarCollapsed} 
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+      />
       
       {/* Main Content Area */}
-      <div className={`flex-1 transition-all duration-300 ${!currentFunction ? (sidebarCollapsed ? 'ml-16' : 'ml-72') : 'ml-0'} flex flex-col min-w-0`}>
-        {/* Desktop Header - apenas quando não há função ativa */}
-        {!currentFunction && <DesktopHeader />}
+      <div className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-72'} flex flex-col min-w-0`}>
+        {/* Desktop Header - sempre visível */}
+        <DesktopHeader />
         
         {/* Main Content */}
-        <main className={`flex-1 overflow-hidden ${!currentFunction ? 'pt-0' : ''}`}>
+        <main className={`flex-1 overflow-hidden`}>
           <div className={`h-full ${!currentFunction ? 'max-w-7xl mx-auto px-6 py-8' : ''}`}>
             {children}
           </div>
         </main>
       </div>
 
-      {/* Botão Global da Professora IA - apenas quando não há função ativa */}
-      {!currentFunction && <GlobalProfessoraButton />}
+      {/* Botão Global da Professora IA - sempre visível */}
+      <GlobalProfessoraButton />
     </div>
   );
 };

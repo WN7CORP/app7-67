@@ -83,7 +83,7 @@ export const FunctionSidebar = ({ config, className }: FunctionSidebarProps) => 
   };
 
   return (
-    <div className={cn("w-72 border-r border-border bg-background/50 backdrop-blur-sm", className)}>
+    <div className={cn("w-64 border-r border-border bg-background/80 backdrop-blur-sm", className)}>
       <div className="p-4 border-b border-border/30">
         <h2 className="font-semibold text-base text-foreground truncate">
           {config.title}
