@@ -84,10 +84,10 @@ const LivroDetail: React.FC<LivroDetailProps> = ({ livro, onBack }) => {
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Capa do Livro */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-20">
-                <Card className="overflow-hidden">
-                  <div className="aspect-[3/4] bg-gradient-to-br from-primary/10 to-primary/20">
+              <div className="lg:col-span-1">
+                <div className="sticky top-20">
+                  <Card className="overflow-hidden">
+                    <div className="aspect-[3/4] max-w-64 mx-auto bg-gradient-to-br from-primary/10 to-primary/20">
                     {livro.capa ? (
                       <img
                         src={livro.capa}
@@ -326,9 +326,9 @@ export const IndicacoesLivros = () => {
                 onClick={() => handleLivroClick(livro)}
               >
                 <CardContent className="p-0">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-0">
+                  <div className="flex gap-4">
                     {/* Capa */}
-                    <div className="md:col-span-1 aspect-[3/4] md:aspect-auto">
+                    <div className="flex-shrink-0 w-20 h-28 md:w-24 md:h-32">
                       {livro.capa ? (
                         <img
                           src={livro.capa}
@@ -343,7 +343,7 @@ export const IndicacoesLivros = () => {
                     </div>
                     
                     {/* Conteúdo */}
-                    <div className="md:col-span-2 p-6">
+                    <div className="flex-1 py-2">
                       <div className="space-y-4">
                         <div>
                           <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
