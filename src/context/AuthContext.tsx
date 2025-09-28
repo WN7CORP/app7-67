@@ -8,6 +8,7 @@ interface UserProfile {
   id: string;
   nome_completo?: string;
   email: string;
+  telefone?: string;
   profile_type?: ProfileType;
 }
 

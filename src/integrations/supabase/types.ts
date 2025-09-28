@@ -3268,6 +3268,33 @@ export type Database = {
         }
         Relationships: []
       }
+      "FLASH-CARDS-FINAL": {
+        Row: {
+          area: string | null
+          exemplo: string | null
+          id: number
+          pergunta: string | null
+          resposta: string | null
+          tema: string | null
+        }
+        Insert: {
+          area?: string | null
+          exemplo?: string | null
+          id?: number
+          pergunta?: string | null
+          resposta?: string | null
+          tema?: string | null
+        }
+        Update: {
+          area?: string | null
+          exemplo?: string | null
+          id?: number
+          pergunta?: string | null
+          resposta?: string | null
+          tema?: string | null
+        }
+        Relationships: []
+      }
       FLASHCARDS: {
         Row: {
           area: string | null
@@ -4343,6 +4370,7 @@ export type Database = {
           nivel: number | null
           nome_completo: string
           progresso_estudo: number | null
+          telefone: string | null
           tipo_usuario: string | null
           updated_at: string | null
         }
@@ -4355,6 +4383,7 @@ export type Database = {
           nivel?: number | null
           nome_completo: string
           progresso_estudo?: number | null
+          telefone?: string | null
           tipo_usuario?: string | null
           updated_at?: string | null
         }
@@ -4367,6 +4396,7 @@ export type Database = {
           nivel?: number | null
           nome_completo?: string
           progresso_estudo?: number | null
+          telefone?: string | null
           tipo_usuario?: string | null
           updated_at?: string | null
         }
@@ -4390,6 +4420,36 @@ export type Database = {
           id?: number
           link?: string | null
           total?: string | null
+        }
+        Relationships: []
+      }
+      phone_recovery_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          phone: string
+          used: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          phone: string
+          used?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          phone?: string
+          used?: boolean | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -6548,6 +6608,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      check_email_exists: {
+        Args: { email_input: string }
+        Returns: boolean
+      }
       check_if_user_is_admin: {
         Args: { user_id: string }
         Returns: boolean
@@ -6576,6 +6640,10 @@ export type Database = {
         Returns: undefined
       }
       cleanup_expired_lesson_content: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_recovery_codes: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }

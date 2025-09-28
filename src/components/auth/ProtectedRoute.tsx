@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { AuthScreen } from './AuthScreen';
+import { EnhancedAuthScreen } from './EnhancedAuthScreen';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -25,7 +25,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!user) {
-    return <AuthScreen />;
+    return <EnhancedAuthScreen />;
   }
 
   return <>{children}</>;
