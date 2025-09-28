@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { 
   Search, ArrowLeft, Scale, BookOpen, 
   ChevronRight, Copy, X, Home, FileText, Scroll,
-  Volume2, Lightbulb, Bookmark, Brain
+  Volume2, Lightbulb, Bookmark, Brain, Plus, Minus, ArrowUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,6 +47,8 @@ const VadeMecumUltraFast: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [articles, setArticles] = useState<VadeMecumArticle[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [fontSize, setFontSize] = useState(16); // Estado para controle de fonte
+  const [showScrollTop, setShowScrollTop] = useState(false); // Estado para botão scroll top
   
   // Estado para Professora IA
   const [showProfessora, setShowProfessora] = useState(false);
@@ -70,19 +72,33 @@ const VadeMecumUltraFast: React.FC = () => {
   const { toast } = useToast();
   const { setCurrentFunction } = useNavigation();
 
-  // Preload códigos populares no primeiro acesso
+  // Controle de scroll e scroll to top
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Preload códigos populares no primeiro acesso para carregamento super rápido
   useEffect(() => {
     if (!isPreloading) {
       isPreloading = true;
       const preloadPopular = async () => {
-        const popular = ['CC', 'CF88', 'CP', 'CPC'];
-        for (const table of popular) {
+        const popular = ['CC', 'CF88', 'CP', 'CPC', 'CPP', 'CLT', 'CDC'];
+        const preloadPromises = popular.map(async (table) => {
           if (!articlesCache.has(`articles-${table.toLowerCase()}`)) {
             try {
               const { data } = await supabase
                 .from(table as any)
                 .select('id, "Número do Artigo", Artigo')
-                .limit(500);
+                .order('id', { ascending: true });
               
               if (data) {
                 const transformed = data.map((item: any) => ({
@@ -99,7 +115,10 @@ const VadeMecumUltraFast: React.FC = () => {
               // Silently fail preload
             }
           }
-        }
+        });
+        
+        // Executa todos em paralelo para máxima velocidade
+        await Promise.allSettled(preloadPromises);
       };
       preloadPopular();
     }
@@ -389,6 +408,37 @@ const VadeMecumUltraFast: React.FC = () => {
     }
   }, [toast]);
 
+  // Função para formatar texto com estilos específicos
+  const formatVademecumText = useCallback((text: string) => {
+    if (!text) return text;
+    
+    // Aplica formatação para títulos do Código Penal e "Parágrafo único"
+    let formattedText = text;
+    
+    // Identifica e formata títulos antes de "Art." - Código Penal
+    formattedText = formattedText.replace(
+      /^([^A][^r][^t].*?)(?=\n\nArt\.)/gm, 
+      '<strong style="font-weight: bold; color: #1f2937;">$1</strong>'
+    );
+    
+    // Formata títulos que aparecem no início de linhas (sem Art.)
+    formattedText = formattedText.replace(
+      /^([A-Z][a-záêôõçã\s]+)(?=\n\nArt\.)/gm,
+      '<strong style="font-weight: bold; color: #1f2937;">$1</strong>'
+    );
+    
+    // Formata "Parágrafo único" em todos os códigos
+    formattedText = formattedText.replace(
+      /(Parágrafo único|PARÁGRAFO ÚNICO)/gi,
+      '<strong style="font-weight: bold; color: #059669;">$1</strong>'
+    );
+    
+    // Quebras de linha para HTML
+    formattedText = formattedText.replace(/\n/g, '<br>');
+    
+    return formattedText;
+  }, []);
+
   // Componente de Card do Artigo
   const VadeMecumArticleCard = ({ article, index }: { article: VadeMecumArticle; index: number }) => {
     const [loadingState, setLoadingState] = useState<{
@@ -514,10 +564,14 @@ const VadeMecumUltraFast: React.FC = () => {
         >
           <Card className="bg-card/50 border-muted">
             <CardContent className="p-3">
-              <div className="text-center">
-                <div className="vademecum-text text-foreground/80 text-sm leading-relaxed">
-                  {articleContent}
-                </div>
+                <div className="text-center">
+                  <div 
+                    className="vademecum-text text-foreground/80 text-sm leading-relaxed"
+                    style={{ fontSize: `${fontSize}px`, lineHeight: 1.6 }}
+                    dangerouslySetInnerHTML={{ 
+                      __html: formatVademecumText(articleContent)
+                    }}
+                  />
                 
                 {/* Apenas botões de IA para cards sem número */}
                 <div className="flex items-center justify-center gap-2 mt-3 pt-3 border-t border-muted">
@@ -574,13 +628,13 @@ const VadeMecumUltraFast: React.FC = () => {
                   <h3 className="font-bold text-lg text-primary mb-2">
                     Art. {articleNumber}
                   </h3>
-                  <div className="vademecum-text text-foreground">
-                    {articleContent.split('\n').map((paragraph, i) => (
-                      <p key={i} className="mb-2 last:mb-0 text-sm leading-relaxed">
-                        {paragraph}
-                      </p>
-                    ))}
-                  </div>
+                  <div 
+                    className="vademecum-text text-foreground" 
+                    style={{ fontSize: `${fontSize}px`, lineHeight: 1.6 }}
+                    dangerouslySetInnerHTML={{ 
+                      __html: formatVademecumText(articleContent)
+                    }}
+                  />
                 </div>
               </div>
 
@@ -722,9 +776,9 @@ const VadeMecumUltraFast: React.FC = () => {
         </div>
 
         <div className="p-4 bg-vademecum-bg min-h-screen">
-          {/* Grid responsivo para códigos */}
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {/* Grid responsivo para códigos - 2 por linha */}
+          <div className="max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {currentCodes.map((code) => (
                 <motion.div
                   key={code.id}
@@ -736,12 +790,12 @@ const VadeMecumUltraFast: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <div className={`rounded-xl ${code.color} shadow-lg hover:shadow-xl transition-all duration-300 p-4 h-full min-h-[120px] flex flex-col justify-between hover:border-vademecum-yellow/50`}>
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="text-3xl group-hover:scale-110 transition-transform">
+                  <div className={`rounded-xl ${code.color} shadow-lg hover:shadow-xl transition-all duration-300 p-6 h-full min-h-[140px] flex flex-col justify-between hover:border-vademecum-yellow/50`}>
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="text-4xl group-hover:scale-110 transition-transform">
                         {code.icon}
                       </div>
-                      <ChevronRight className={`h-5 w-5 ${code.textColor} group-hover:translate-x-1 transition-transform opacity-70`} />
+                      <ChevronRight className={`h-6 w-6 ${code.textColor} group-hover:translate-x-1 transition-transform opacity-70`} />
                     </div>
                     
                     <div className="flex-1">
@@ -914,6 +968,50 @@ const VadeMecumUltraFast: React.FC = () => {
           conteudo: generatedModal.content || 'Consulta sobre artigos do Vade Mecum'
         }} 
       />
+      
+      {/* Botões Flutuantes */}
+      {view === 'articles' && (
+        <>
+          {/* Controles de Fonte - Canto Inferior Esquerdo */}
+          <div className="fixed bottom-6 left-6 flex flex-col gap-2 z-50">
+            <Button
+              onClick={() => setFontSize(prev => Math.min(prev + 2, 24))}
+              size="sm"
+              className="w-10 h-10 rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+            <div className="text-xs text-center text-primary font-medium bg-background/90 rounded px-2 py-1 shadow">
+              {fontSize}px
+            </div>
+            <Button
+              onClick={() => setFontSize(prev => Math.max(prev - 2, 12))}
+              size="sm"
+              className="w-10 h-10 rounded-full bg-primary hover:bg-primary/90 shadow-lg"
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Botão Scroll to Top - Canto Inferior Direito */}
+          {showScrollTop && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="fixed bottom-6 right-6 z-50"
+            >
+              <Button
+                onClick={scrollToTop}
+                size="sm"
+                className="w-12 h-12 rounded-full bg-accent hover:bg-accent/90 shadow-lg"
+              >
+                <ArrowUp className="h-5 w-5" />
+              </Button>
+            </motion.div>
+          )}
+        </>
+      )}
     </div>
   );
 };
