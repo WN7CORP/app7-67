@@ -6,7 +6,6 @@ import { ArrowLeft, Clock, User, Calendar, FileText, X, Check, SkipForward, Paus
 import { YouTubePlaylist } from '@/hooks/useYouTube';
 import { useToast } from '@/hooks/use-toast';
 import { LazyProfessoraIA } from '@/components/lazy/LazyComponents';
-
 import { VideoFloatingButtons } from '@/components/VideoFloatingButtons';
 import { useIsMobile } from '@/hooks/use-mobile';
 interface VideoPlayerEnhancedProps {
@@ -34,7 +33,9 @@ export const VideoPlayerEnhanced = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showProfessoraIA, setShowProfessoraIA] = useState(false);
   const playerRef = useRef<HTMLIFrameElement>(null);
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const isMobile = useIsMobile();
   const currentVideo = playlist.videos[currentVideoIndex];
   useEffect(() => {
@@ -123,26 +124,12 @@ export const VideoPlayerEnhanced = ({
         
         {/* Botões otimizados */}
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowNotes(!showNotes)}
-            className="flex items-center gap-2"
-          >
-            <StickyNote className="h-4 w-4" />
-            {showNotes ? 'Ocultar' : 'Anotações'}
-          </Button>
           
-          {!isMobile && (
-            <Button
-              onClick={() => setShowProfessoraIA(true)}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white flex items-center gap-2"
-              size="sm"
-            >
+          
+          {!isMobile && <Button onClick={() => setShowProfessoraIA(true)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white flex items-center gap-2" size="sm">
               <GraduationCap className="h-4 w-4" />
               Professora IA
-            </Button>
-          )}
+            </Button>}
         </div>
       </div>
 
@@ -261,23 +248,12 @@ export const VideoPlayerEnhanced = ({
       </div>
 
       {/* Professora IA para Desktop */}
-      {!isMobile && (
-        <Suspense fallback={null}>
-          <LazyProfessoraIA 
-            video={currentVideo}
-            area={video.area}
-            isOpen={showProfessoraIA}
-            onClose={() => setShowProfessoraIA(false)}
-          />
-        </Suspense>
-      )}
+      {!isMobile && <Suspense fallback={null}>
+          <LazyProfessoraIA video={currentVideo} area={video.area} isOpen={showProfessoraIA} onClose={() => setShowProfessoraIA(false)} />
+        </Suspense>}
 
       {/* Botões Flutuantes de IA */}
-      <VideoFloatingButtons 
-        videoTitle={currentVideo.title}
-        videoId={currentVideo.id}
-        channelTitle={currentVideo.channelTitle}
-      />
+      <VideoFloatingButtons videoTitle={currentVideo.title} videoId={currentVideo.id} channelTitle={currentVideo.channelTitle} />
 
     </div>;
 };

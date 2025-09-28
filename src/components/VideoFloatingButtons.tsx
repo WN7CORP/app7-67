@@ -6,13 +6,11 @@ import { Brain, MessageSquare, BookOpen, Loader2, X, Sparkles } from 'lucide-rea
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
-
 interface VideoFloatingButtonsProps {
   videoTitle: string;
   videoId: string;
   channelTitle: string;
 }
-
 interface AIResponse {
   resumo?: string;
   mapaMental?: string;
@@ -23,24 +21,25 @@ interface AIResponse {
     explicacao: string;
   }>;
 }
-
-export const VideoFloatingButtons = ({ videoTitle, videoId, channelTitle }: VideoFloatingButtonsProps) => {
+export const VideoFloatingButtons = ({
+  videoTitle,
+  videoId,
+  channelTitle
+}: VideoFloatingButtonsProps) => {
   const [loading, setLoading] = useState<string | null>(null);
   const [activeDialog, setActiveDialog] = useState<string | null>(null);
   const [aiResponse, setAiResponse] = useState<AIResponse>({});
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const generateAIContent = async (type: 'resumo' | 'mapaMental' | 'questoes') => {
     if (aiResponse[type]) {
       setActiveDialog(type);
       return;
     }
-
     setLoading(type);
-    
     try {
       let prompt = '';
-      
       switch (type) {
         case 'resumo':
           prompt = `Faça um resumo completo e estruturado do vídeo "${videoTitle}" do canal "${channelTitle}". 
@@ -66,128 +65,86 @@ export const VideoFloatingButtons = ({ videoTitle, videoId, channelTitle }: Vide
                    }`;
           break;
       }
-
-      const { data, error } = await supabase.functions.invoke('gemini-ai-chat', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('gemini-ai-chat', {
         body: {
           message: prompt,
           conversationHistory: []
         }
       });
-
       if (error) throw error;
-
       if (type === 'questoes') {
         try {
           const jsonResponse = JSON.parse(data.response);
-          setAiResponse(prev => ({ ...prev, [type]: jsonResponse.questoes }));
+          setAiResponse(prev => ({
+            ...prev,
+            [type]: jsonResponse.questoes
+          }));
         } catch {
           // Se não conseguir fazer parse como JSON, trata como texto
-          setAiResponse(prev => ({ ...prev, [type]: data.response }));
+          setAiResponse(prev => ({
+            ...prev,
+            [type]: data.response
+          }));
         }
       } else {
-        setAiResponse(prev => ({ ...prev, [type]: data.response }));
+        setAiResponse(prev => ({
+          ...prev,
+          [type]: data.response
+        }));
       }
-
       setActiveDialog(type);
-      
       toast({
         title: "Conteúdo gerado!",
-        description: "O conteúdo foi gerado com sucesso pela IA.",
+        description: "O conteúdo foi gerado com sucesso pela IA."
       });
-      
     } catch (error) {
       console.error('Erro ao gerar conteúdo:', error);
       toast({
         title: "Erro ao gerar conteúdo",
         description: "Tente novamente em alguns segundos.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setLoading(null);
     }
   };
-
   const renderQuestoes = () => {
     const questoes = aiResponse.questoes;
     if (!questoes || !Array.isArray(questoes)) {
       return <MarkdownRenderer content={String(aiResponse.questoes) || ''} />;
     }
-
-    return (
-      <div className="space-y-6">
-        {questoes.map((questao, index) => (
-          <Card key={index} className="bg-slate-800/50 border-slate-700/50">
+    return <div className="space-y-6">
+        {questoes.map((questao, index) => <Card key={index} className="bg-slate-800/50 border-slate-700/50">
             <CardContent className="p-4">
               <h4 className="font-semibold text-white mb-3">
                 {index + 1}. {questao.pergunta}
               </h4>
               <div className="space-y-2 mb-4">
-                {questao.alternativas.map((alternativa, altIndex) => (
-                  <div 
-                    key={altIndex}
-                    className={`p-2 rounded ${
-                      altIndex === questao.resposta_correta 
-                        ? 'bg-green-500/20 border border-green-500/50 text-green-200' 
-                        : 'bg-slate-700/50 text-slate-300'
-                    }`}
-                  >
+                {questao.alternativas.map((alternativa, altIndex) => <div key={altIndex} className={`p-2 rounded ${altIndex === questao.resposta_correta ? 'bg-green-500/20 border border-green-500/50 text-green-200' : 'bg-slate-700/50 text-slate-300'}`}>
                     {alternativa}
-                  </div>
-                ))}
+                  </div>)}
               </div>
               <div className="bg-blue-500/10 border border-blue-500/30 p-3 rounded">
                 <h5 className="font-medium text-blue-300 mb-1">Explicação:</h5>
                 <p className="text-blue-200 text-sm">{questao.explicacao}</p>
               </div>
             </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
+          </Card>)}
+      </div>;
   };
-
-  return (
-    <>
+  return <>
       {/* Botões Flutuantes */}
       <div className="fixed right-4 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-3">
-        <Button
-          onClick={() => generateAIContent('resumo')}
-          disabled={loading === 'resumo'}
-          className="w-12 h-12 rounded-full bg-blue-600/90 hover:bg-blue-500 backdrop-blur-sm border border-blue-400/30 shadow-lg"
-          size="icon"
-        >
-          {loading === 'resumo' ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <BookOpen className="h-5 w-5" />
-          )}
+        <Button onClick={() => generateAIContent('resumo')} disabled={loading === 'resumo'} className="w-12 h-12 rounded-full bg-blue-600/90 hover:bg-blue-500 backdrop-blur-sm border border-blue-400/30 shadow-lg" size="icon">
+          {loading === 'resumo' ? <Loader2 className="h-5 w-5 animate-spin" /> : <BookOpen className="h-5 w-5" />}
         </Button>
 
-        <Button
-          onClick={() => generateAIContent('mapaMental')}
-          disabled={loading === 'mapaMental'}
-          className="w-12 h-12 rounded-full bg-purple-600/90 hover:bg-purple-500 backdrop-blur-sm border border-purple-400/30 shadow-lg"
-          size="icon"
-        >
-          {loading === 'mapaMental' ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <Brain className="h-5 w-5" />
-          )}
-        </Button>
+        
 
-        <Button
-          onClick={() => generateAIContent('questoes')}
-          disabled={loading === 'questoes'}
-          className="w-12 h-12 rounded-full bg-green-600/90 hover:bg-green-500 backdrop-blur-sm border border-green-400/30 shadow-lg"
-          size="icon"
-        >
-          {loading === 'questoes' ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <MessageSquare className="h-5 w-5" />
-          )}
-        </Button>
+        
       </div>
 
       {/* Dialogs para cada tipo de conteúdo */}
@@ -232,6 +189,5 @@ export const VideoFloatingButtons = ({ videoTitle, videoId, channelTitle }: Vide
           </div>
         </DialogContent>
       </Dialog>
-    </>
-  );
+    </>;
 };
