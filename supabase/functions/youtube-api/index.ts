@@ -39,11 +39,19 @@ serve(async (req): Promise<Response> => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    const { action, videoId, playlistId, areaFilter } = await req.json();
+    const requestBody = await req.json();
+    const { action, videoId, playlistId, areaFilter, query } = requestBody;
 
-    console.log('YouTube API request:', { action, videoId, playlistId, areaFilter });
+    console.log('YouTube API request:', { action, videoId, playlistId, areaFilter, query });
 
     switch (action) {
+      case 'searchVideos':
+        const searchResults = await searchVideos(query);
+        return new Response(
+          JSON.stringify(searchResults),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+
       case 'getVideosByArea':
         return await getVideosByArea(supabase, areaFilter);
       
@@ -272,4 +280,38 @@ function formatDuration(duration: string): string {
     return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+async function searchVideos(query: string) {
+  const API_KEY = Deno.env.get('YOUTUBE_API_KEY');
+  
+  if (!API_KEY) {
+    throw new Error('YouTube API key not configured');
+  }
+
+  try {
+    const searchResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=10&key=${API_KEY}`
+    );
+    
+    if (!searchResponse.ok) {
+      throw new Error(`YouTube API error: ${searchResponse.status}`);
+    }
+    
+    const searchData = await searchResponse.json();
+    
+    const videos = searchData.items?.map((item: any) => ({
+      id: item.id.videoId,
+      title: item.snippet.title,
+      description: item.snippet.description,
+      thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url,
+      publishedAt: item.snippet.publishedAt,
+      channelTitle: item.snippet.channelTitle,
+    })) || [];
+    
+    return { videos };
+  } catch (error) {
+    console.error('Error searching videos:', error);
+    throw error;
+  }
 }
