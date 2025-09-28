@@ -2,11 +2,10 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { OptimizedImage } from './OptimizedImage';
 import { ArrowLeft, BookOpen, Search, Loader2 } from 'lucide-react';
 import { useNavigation } from '@/context/NavigationContext';
-import { useLivrosPorProfissaoOAB } from '@/hooks/useBibliotecaOAB';
-import { BibliotecaProfissoesOAB } from './BibliotecaProfissoesOAB';
-import { BibliotecaAreasOAB } from './BibliotecaAreasOAB';
+import { useLivrosPorAreaOAB } from '@/hooks/useBibliotecaExameOAB';
 import { BibliotecaLista } from './BibliotecaLista';
 import { BibliotecaLeitor } from './BibliotecaLeitor';
 import { SearchPreviewBar } from './SearchPreviewBar';
@@ -14,30 +13,30 @@ import { JuridicalBookCard } from './JuridicalBookCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-interface LivroJuridico {
+interface LivroOAB {
   id: number;
-  imagem: string;
-  livro: string;
-  autor?: string;
-  area: string;
-  sobre?: string;
-  link?: string;
-  download?: string;
-  Profissões?: string;
-  'profissões-area'?: string;
-  'capa-profissao'?: string;
+  'Área': string;
+  'Profissões': string;
+  'Tema': string;
+  'Download': string;
+  'Link': string;
+  'Capa-area': string;
+  'Capa-livro': string;
+  'Sobre': string;
+  'profissões-area': string;
+  'capa-profissao': string;
+  'Ordem': string;
 }
 
-type ViewMode = 'profissoes' | 'areas' | 'lista' | 'leitor' | 'busca';
+type ViewMode = 'areas' | 'lista' | 'leitor' | 'busca';
 
 export const BibliotecaExameOAB = () => {
   const { setCurrentFunction } = useNavigation();
-  const { livrosPorProfissao, profissoesOAB, livros, isLoading, error } = useLivrosPorProfissaoOAB();
+  const { livrosPorArea, areas, livros, isLoading, error } = useLivrosPorAreaOAB();
   const isMobile = useIsMobile();
-  const [viewMode, setViewMode] = useState<ViewMode>('profissoes');
-  const [selectedProfissao, setSelectedProfissao] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('areas');
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
-  const [selectedBook, setSelectedBook] = useState<LivroJuridico | null>(null);
+  const [selectedBook, setSelectedBook] = useState<LivroOAB | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleBack = () => {
@@ -47,20 +46,12 @@ export const BibliotecaExameOAB = () => {
     } else if (viewMode === 'lista') {
       setViewMode('areas');
       setSelectedArea(null);
-    } else if (viewMode === 'areas') {
-      setViewMode('profissoes');
-      setSelectedProfissao(null);
     } else if (viewMode === 'busca') {
-      setViewMode('profissoes');
+      setViewMode('areas');
       setSearchTerm('');
     } else {
       setCurrentFunction(null);
     }
-  };
-
-  const handleProfissaoClick = (profissao: string) => {
-    setSelectedProfissao(profissao);
-    setViewMode('areas');
   };
 
   const handleAreaClick = (area: string) => {
@@ -68,7 +59,7 @@ export const BibliotecaExameOAB = () => {
     setViewMode('lista');
   };
 
-  const handleBookClick = (livro: LivroJuridico) => {
+  const handleBookClick = (livro: LivroOAB) => {
     setSelectedBook(livro);
     setViewMode('leitor');
   };
@@ -81,14 +72,12 @@ export const BibliotecaExameOAB = () => {
 
   const getPageTitle = () => {
     switch (viewMode) {
-      case 'profissoes':
-        return 'Biblioteca Exame da Ordem - OAB';
       case 'areas':
-        return selectedProfissao ? `${selectedProfissao} - Áreas` : 'Áreas da OAB';
+        return 'Biblioteca Exame da Ordem - OAB';
       case 'lista':
         return selectedArea || 'Lista de Livros';
       case 'leitor':
-        return selectedBook?.livro || 'Leitor';
+        return selectedBook?.['Tema'] || 'Leitor';
       case 'busca':
         return `Busca: "${searchTerm}"`;
       default:
@@ -96,17 +85,13 @@ export const BibliotecaExameOAB = () => {
     }
   };
 
-  // Organizar livros por profissões da OAB a partir do hook
-  const livrosPorProfissaoOAB = livrosPorProfissao;
-
   // Filtrar livros por busca global
   const filteredBooks = searchTerm
     ? livros.filter(livro => 
-        livro.livro.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        livro.area.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (livro.autor && livro.autor.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (livro.sobre && livro.sobre.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (livro.Profissões && livro.Profissões.toLowerCase().includes(searchTerm.toLowerCase()))
+        livro['Tema'].toLowerCase().includes(searchTerm.toLowerCase()) ||
+        livro['Área'].toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (livro['Sobre'] && livro['Sobre'].toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (livro['Profissões'] && livro['Profissões'].toLowerCase().includes(searchTerm.toLowerCase()))
       )
     : [];
 
@@ -142,10 +127,21 @@ export const BibliotecaExameOAB = () => {
 
   // Leitor em tela cheia
   if (viewMode === 'leitor' && selectedBook) {
+    // Converter LivroOAB para formato esperado pelo BibliotecaLeitor
+    const livroFormatado = {
+      id: selectedBook.id,
+      imagem: selectedBook['Capa-livro'] || '',
+      livro: selectedBook['Tema'] || '',
+      area: selectedBook['Área'] || '',
+      sobre: selectedBook['Sobre'] || '',
+      link: selectedBook['Link'] || '',
+      download: selectedBook['Download'] || ''
+    };
+
     return (
       <AnimatePresence mode="wait">
         <BibliotecaLeitor
-          livro={selectedBook}
+          livro={livroFormatado}
           onClose={handleBack}
         />
       </AnimatePresence>
@@ -157,15 +153,15 @@ export const BibliotecaExameOAB = () => {
       {/* Header Consistente */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/30 h-14">
         <div className="flex items-center h-full px-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleBack}
-            className="flex items-center gap-2 hover:bg-accent/80"
-          >
-            <ArrowLeft className="h-5 w-5" strokeWidth={3} />
-            {viewMode === 'lista' ? 'Áreas' : viewMode === 'areas' ? 'Profissões' : 'Voltar'}
-          </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBack}
+              className="flex items-center gap-2 hover:bg-accent/80"
+            >
+              <ArrowLeft className="h-5 w-5" strokeWidth={3} />
+              {viewMode === 'lista' ? 'Áreas' : 'Voltar'}
+            </Button>
           <div className="flex items-center gap-2 ml-4">
             <BookOpen className="h-5 w-5 text-primary" />
             <h1 className="text-lg font-semibold">{getPageTitle()}</h1>
@@ -176,27 +172,25 @@ export const BibliotecaExameOAB = () => {
       {/* Conteúdo principal */}
       <div className="pt-14 h-full overflow-y-auto">
         <div className="container mx-auto px-4 py-6">
-          {/* Barra de busca global - só quando selecionada uma profissão */}
+          {/* Barra de busca global */}
           {viewMode === 'areas' && (
             <div className="mb-8">
               <div className="relative max-w-md mx-auto">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <SearchPreviewBar
-                          placeholder="Pesquisar em toda a biblioteca..."
-                          data={livros}
-                          searchFields={['Profissões', 'livro', 'autor', 'area']}
-                          onItemClick={(livro) => {
-                            if (livro.Profissões) {
-                              const oabProfissoes = livro.Profissões.split(',')
-                                .map(p => p.trim())
-                                .filter(p => p.toLowerCase().includes('oab'));
-                              if (oabProfissoes.length > 0) {
-                                handleProfissaoClick(oabProfissoes[0]);
-                              }
-                            }
-                          }}
-                          className="pl-10"
-                        />
+                <SearchPreviewBar
+                  placeholder="Pesquisar em toda a biblioteca OAB..."
+                  data={livros.map(livro => ({
+                    ...livro,
+                    livro: livro['Tema'],
+                    area: livro['Área'],
+                    sobre: livro['Sobre']
+                  }))}
+                  searchFields={['livro', 'area', 'sobre']}
+                  onItemClick={(livro) => {
+                    handleAreaClick(livro.area);
+                  }}
+                  className="pl-10"
+                />
               </div>
             </div>
           )}
@@ -207,35 +201,19 @@ export const BibliotecaExameOAB = () => {
             </div>
           ) : (
             <AnimatePresence mode="wait">
-              {viewMode === 'profissoes' && (
+              {viewMode === 'areas' && (
                 <motion.div
-                  key="profissoes"
+                  key="areas"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <BibliotecaProfissoesOAB
-                    livrosPorProfissao={livrosPorProfissaoOAB}
-                    profissoesOAB={profissoesOAB}
-                    onProfissaoClick={handleProfissaoClick}
-                  />
-                </motion.div>
-              )}
-
-              {viewMode === 'areas' && selectedProfissao && (
-                <motion.div
-                  key="areas"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.3 }}
-                >
                   <div className="space-y-6">
                     <div className="text-center">
-                      <h2 className="text-2xl font-bold mb-2">Áreas - {selectedProfissao}</h2>
+                      <h2 className="text-2xl font-bold mb-2">Áreas do Exame da OAB</h2>
                       <p className="text-muted-foreground">
-                        Escolha a área específica para ver os livros
+                        Escolha a área específica para ver os materiais de estudo
                       </p>
                     </div>
                     <motion.div 
@@ -244,50 +222,51 @@ export const BibliotecaExameOAB = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      {livrosPorProfissaoOAB[selectedProfissao]?.livros
-                        .reduce((areas: string[], livro) => {
-                          if (livro.area && !areas.includes(livro.area)) {
-                            areas.push(livro.area);
-                          }
-                          return areas;
-                        }, [])
-                        .map((area, index) => (
-                          <motion.div
-                            key={area}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                      {areas.map((area, index) => (
+                        <motion.div
+                          key={area}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                        >
+                          <Card 
+                            className="group cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 bg-card/50 backdrop-blur-sm border-border/50"
+                            onClick={() => handleAreaClick(area)}
                           >
-                            <Card 
-                              className="group cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 bg-card/50 backdrop-blur-sm border-border/50"
-                              onClick={() => handleAreaClick(area)}
-                            >
-                              <CardContent className="p-4">
-                                <div className="aspect-[3/4] mb-4 rounded-lg overflow-hidden bg-gradient-to-br from-primary/5 to-secondary/5 relative">
+                            <CardContent className="p-4">
+                              <div className="aspect-[3/4] mb-4 rounded-lg overflow-hidden bg-gradient-to-br from-primary/5 to-secondary/5 relative">
+                                {livrosPorArea[area]?.capa ? (
+                                  <OptimizedImage
+                                    src={livrosPorArea[area].capa!}
+                                    alt={`Capa da área ${area}`}
+                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                  />
+                                ) : (
                                   <div className="flex items-center justify-center h-full">
                                     <BookOpen className="h-16 w-16 text-muted-foreground/50" />
                                   </div>
-                                  <div className="absolute top-2 right-2">
-                                    <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm">
-                                      {livrosPorProfissaoOAB[selectedProfissao]?.livros.filter(l => l.area === area).length} livros
-                                    </Badge>
-                                  </div>
+                                )}
+                                <div className="absolute top-2 right-2">
+                                  <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm">
+                                    {livrosPorArea[area]?.livros.length || 0} materiais
+                                  </Badge>
                                 </div>
-                                <div className="space-y-2">
-                                  <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
-                                    {area}
-                                  </h3>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </motion.div>
-                        ))}
+                              </div>
+                              <div className="space-y-2">
+                                <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                                  {area}
+                                </h3>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
                     </motion.div>
                   </div>
                 </motion.div>
               )}
 
-              {viewMode === 'lista' && selectedArea && selectedProfissao && (
+              {viewMode === 'lista' && selectedArea && (
                 <motion.div
                   key="lista"
                   initial={{ opacity: 0, x: 20 }}
@@ -295,12 +274,51 @@ export const BibliotecaExameOAB = () => {
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <BibliotecaLista
-                    area={selectedArea}
-                    livros={livrosPorProfissaoOAB[selectedProfissao]?.livros.filter(l => l.area === selectedArea) || []}
-                    onBack={handleBack}
-                    onBookClick={handleBookClick}
-                  />
+                  <div className="space-y-6">
+                    <div className="text-center">
+                      <h2 className="text-2xl font-bold mb-2">{selectedArea}</h2>
+                      <p className="text-muted-foreground">
+                        Materiais de estudo para {selectedArea}
+                      </p>
+                    </div>
+                    <motion.div 
+                      className={`grid gap-4 ${isMobile ? 'grid-cols-1' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {livrosPorArea[selectedArea]?.livros.map((livro, index) => (
+                        <motion.div
+                          key={livro.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                        >
+                          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                            <CardContent className="p-4" onClick={() => handleBookClick(livro)}>
+                              <div className="aspect-[3/4] mb-4 rounded-lg overflow-hidden">
+                                {livro['Capa-livro'] ? (
+                                  <OptimizedImage
+                                    src={livro['Capa-livro']}
+                                    alt={livro['Tema']}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex items-center justify-center h-full bg-gradient-to-br from-primary/5 to-secondary/5">
+                                    <BookOpen className="h-16 w-16 text-muted-foreground/50" />
+                                  </div>
+                                )}
+                              </div>
+                              <h3 className="font-semibold text-sm line-clamp-2">{livro['Tema']}</h3>
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                {livro['Sobre'] || 'Material de estudo para OAB'}
+                              </p>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  </div>
                 </motion.div>
               )}
 
@@ -340,11 +358,25 @@ export const BibliotecaExameOAB = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3 }}
                           >
-                            <JuridicalBookCard 
-                              livro={livro} 
-                              showAreaBadge={true}
-                              onClick={() => handleBookClick(livro)}
-                            />
+                            <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                              <CardContent className="p-4" onClick={() => handleBookClick(livro)}>
+                                <div className="aspect-[3/4] mb-4 rounded-lg overflow-hidden">
+                                  {livro['Capa-livro'] ? (
+                                    <OptimizedImage
+                                      src={livro['Capa-livro']}
+                                      alt={livro['Tema']}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="flex items-center justify-center h-full bg-gradient-to-br from-primary/5 to-secondary/5">
+                                      <BookOpen className="h-16 w-16 text-muted-foreground/50" />
+                                    </div>
+                                  )}
+                                </div>
+                                <h3 className="font-semibold text-sm line-clamp-2">{livro['Tema']}</h3>
+                                <Badge variant="secondary" className="mt-2">{livro['Área']}</Badge>
+                              </CardContent>
+                            </Card>
                           </motion.div>
                         ))}
                       </motion.div>
