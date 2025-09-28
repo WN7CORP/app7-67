@@ -2,35 +2,21 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Search, Play, FileText, MessageCircle, User } from 'lucide-react';
+import { ArrowLeft, Search, Play, User } from 'lucide-react';
 import { useNavigation } from '@/context/NavigationContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { VideoPlayer } from '@/components/VideoPlayer';
 import { ProfessoraIAFloatingButton } from '@/components/ProfessoraIAFloatingButton';
 
-interface VideoArea {
+interface VideoPlaylist {
   id: number;
-  Area: string;
-  Tema: string;
-  Modulo: string;
-  Aula: string;
-  Assunto: string;
-  video: string;
-  material: string;
-  conteudo: string;
-  'capa-area': string;
-  'capa-modulo': string;
-  capa: string;
+  area: string;
+  link: string;
 }
 
 interface PlaylistData {
   area: string;
-  playlists: {
-    modulo: string;
-    videos: VideoArea[];
-    thumbnail: string;
-  }[];
+  playlists: VideoPlaylist[];
 }
 
 export const Videoaulas = () => {
@@ -38,11 +24,6 @@ export const Videoaulas = () => {
   const [videoData, setVideoData] = useState<PlaylistData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedVideo, setSelectedVideo] = useState<VideoArea | null>(null);
-  const [selectedPlaylist, setSelectedPlaylist] = useState<any>(null);
-  const [showSummaryModal, setShowSummaryModal] = useState(false);
-  const [summaryText, setSummaryText] = useState('');
-  const [loadingSummary, setLoadingSummary] = useState(false);
 
   useEffect(() => {
     loadVideoData();
@@ -51,38 +32,29 @@ export const Videoaulas = () => {
   const loadVideoData = async () => {
     try {
       const { data, error } = await (supabase as any)
-        .from('CURSOS-APP-VIDEO')
+        .from('VIDEOS-AULAS-FINAL')
         .select('*')
-        .order('Area', { ascending: true })
-        .order('Modulo', { ascending: true });
+        .order('area', { ascending: true });
 
       if (error) throw error;
 
-      // Agrupar por área e módulo
-      const groupedData: { [area: string]: { [modulo: string]: VideoArea[] } } = {};
+      // Agrupar por área
+      const groupedData: { [area: string]: VideoPlaylist[] } = {};
       
-      data?.forEach((item: VideoArea) => {
-        if (!item.Area || !item.Modulo) return;
+      data?.forEach((item: VideoPlaylist) => {
+        if (!item.area) return;
         
-        if (!groupedData[item.Area]) {
-          groupedData[item.Area] = {};
+        if (!groupedData[item.area]) {
+          groupedData[item.area] = [];
         }
         
-        if (!groupedData[item.Area][item.Modulo]) {
-          groupedData[item.Area][item.Modulo] = [];
-        }
-        
-        groupedData[item.Area][item.Modulo].push(item);
+        groupedData[item.area].push(item);
       });
 
       // Converter para formato de playlist
-      const playlistData: PlaylistData[] = Object.entries(groupedData).map(([area, modulos]) => ({
+      const playlistData: PlaylistData[] = Object.entries(groupedData).map(([area, playlists]) => ({
         area,
-        playlists: Object.entries(modulos).map(([modulo, videos]) => ({
-          modulo,
-          videos,
-          thumbnail: videos[0]?.capa || videos[0]?.['capa-modulo'] || ''
-        }))
+        playlists
       }));
 
       setVideoData(playlistData);
@@ -102,122 +74,32 @@ export const Videoaulas = () => {
     setCurrentFunction(null);
   };
 
-  const handlePlaylistClick = (playlist: any, area: string) => {
-    const playlistData = {
-      title: playlist.modulo,
-      videos: playlist.videos.map((video: VideoArea) => ({
-        id: video.video?.split('v=')[1]?.split('&')[0] || '',
-        title: video.Assunto || video.Aula,
-        description: video.conteudo || '',
-        thumbnail: `https://img.youtube.com/vi/${video.video?.split('v=')[1]?.split('&')[0]}/mqdefault.jpg`,
-        duration: '15:00', // placeholder
-        channelTitle: 'Canal Jurídico',
-        publishedAt: new Date().toISOString(),
-        url: video.video
-      })),
-      area
-    };
+  const handlePlaylistClick = (playlist: VideoPlaylist) => {
+    window.open(playlist.link, '_blank');
+  };
 
-    setSelectedPlaylist(playlistData);
-    if (playlist.videos.length > 0) {
-      setSelectedVideo(playlist.videos[0]);
+  const generatePlaylistThumbnail = (link: string) => {
+    // Extrair ID da playlist do YouTube
+    const playlistMatch = link.match(/[?&]list=([^&]+)/);
+    if (playlistMatch) {
+      return `https://img.youtube.com/vi/${playlistMatch[1]}/mqdefault.jpg`;
     }
-  };
-
-  const handleVideoBack = () => {
-    setSelectedVideo(null);
-    setSelectedPlaylist(null);
-  };
-
-  const generateSummary = async () => {
-    if (!selectedVideo) return;
-
-    setLoadingSummary(true);
-    try {
-      const response = await fetch('/functions/v1/generate-video-summary', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          videoUrl: selectedVideo.video,
-          title: selectedVideo.Assunto || selectedVideo.Aula
-        }),
-      });
-
-      const data = await response.json();
-      setSummaryText(data.summary || "Resumo não disponível");
-      setShowSummaryModal(true);
-    } catch (error) {
-      console.error('Erro ao gerar resumo:', error);
-      setSummaryText("Não foi possível gerar o resumo automaticamente. Este vídeo aborda conceitos importantes sobre " + (selectedVideo.Assunto || selectedVideo.Aula) + ". Assista ao vídeo completo para obter todas as informações detalhadas.");
-      setShowSummaryModal(true);
-    } finally {
-      setLoadingSummary(false);
+    
+    // Extrair ID do vídeo do YouTube como fallback
+    const videoMatch = link.match(/(?:v=|\/embed\/|\/v\/|\.be\/)([^&\n?#]+)/);
+    if (videoMatch) {
+      return `https://img.youtube.com/vi/${videoMatch[1]}/mqdefault.jpg`;
     }
+    
+    return '';
   };
 
-  const filteredData = videoData.map(area => ({
-    ...area,
-    playlists: area.playlists.filter(playlist => 
-      playlist.modulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      area.area.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredData = videoData.map(areaData => ({
+    ...areaData,
+    playlists: areaData.playlists.filter(playlist => 
+      playlist.area.toLowerCase().includes(searchTerm.toLowerCase())
     )
-  })).filter(area => area.playlists.length > 0);
-
-  if (selectedVideo && selectedPlaylist) {
-    return (
-      <div className="min-h-screen bg-background">
-        <VideoPlayer
-          video={selectedVideo}
-          playlist={selectedPlaylist}
-          onBack={handleVideoBack}
-          favorites={[]}
-          onToggleFavorite={() => {}}
-          watchedVideos={[]}
-          onMarkAsWatched={() => {}}
-        />
-        
-        {/* Floating Buttons */}
-        <ProfessoraIAFloatingButton onOpen={() => {}} />
-        
-        {/* Summary Button */}
-        <Button
-          onClick={generateSummary}
-          disabled={loadingSummary}
-          className="fixed bottom-20 right-4 z-50 h-14 w-14 rounded-full shadow-lg bg-green-600 hover:bg-green-700"
-          size="sm"
-        >
-          <FileText className="h-6 w-6" />
-        </Button>
-
-        {/* Summary Modal */}
-        {showSummaryModal && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <Card className="w-full max-w-2xl max-h-[80vh] overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Resumo do Vídeo</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowSummaryModal(false)}
-                  >
-                    ✕
-                  </Button>
-                </div>
-                <div className="overflow-y-auto max-h-96">
-                  <p className="text-muted-foreground leading-relaxed">
-                    {summaryText || "Gerando resumo..."}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </div>
-    );
-  }
+  })).filter(areaData => areaData.playlists.length > 0);
 
   if (loading) {
     return (
@@ -279,18 +161,21 @@ export const Videoaulas = () => {
               <h2 className="text-xl font-bold mb-4 text-center">{areaData.area}</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {areaData.playlists.map((playlist, index) => (
+                {areaData.playlists.map((playlist) => (
                   <Card 
-                    key={index}
+                    key={playlist.id}
                     className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
-                    onClick={() => handlePlaylistClick(playlist, areaData.area)}
+                    onClick={() => handlePlaylistClick(playlist)}
                   >
                     <div className="relative aspect-video bg-gradient-to-br from-primary/20 to-primary/10">
-                      {playlist.thumbnail ? (
+                      {generatePlaylistThumbnail(playlist.link) ? (
                         <img
-                          src={playlist.thumbnail}
-                          alt={playlist.modulo}
+                          src={generatePlaylistThumbnail(playlist.link)}
+                          alt={playlist.area}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
@@ -305,20 +190,20 @@ export const Videoaulas = () => {
                         </div>
                       </div>
 
-                      {/* Video count badge */}
-                      <div className="absolute top-2 left-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
-                        {playlist.videos.length} vídeo{playlist.videos.length !== 1 ? 's' : ''}
+                      {/* External link indicator */}
+                      <div className="absolute top-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded">
+                        YouTube
                       </div>
                     </div>
                     
                     <CardContent className="p-4">
                       <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
-                        {playlist.modulo}
+                        {playlist.area}
                       </h3>
                       
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <User className="h-4 w-4" />
-                        <span>Jurídico</span>
+                        <span>Playlist Jurídica</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -327,6 +212,9 @@ export const Videoaulas = () => {
             </div>
           ))}
         </div>
+
+        {/* Floating Buttons */}
+        <ProfessoraIAFloatingButton onOpen={() => {}} />
 
         {filteredData.length === 0 && (
           <div className="text-center py-12">
