@@ -42,9 +42,12 @@ serve(async (req) => {
       historyLength: conversationHistory.length 
     })
     
-    // Use the hardcoded API key as provided by user
-    const geminiApiKey = 'AIzaSyBX7qgNnl7_1hcCqAO62aWFM7dBDDbBIbw'
-    console.log('✅ Using provided Gemini API Key')
+    // Use the API key from Supabase secrets
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY')
+    if (!geminiApiKey) {
+      throw new Error('Gemini API key not configured')
+    }
+    console.log('✅ Using Gemini API Key from secrets')
 
     console.log('✅ Gemini API Key found, length:', geminiApiKey.length);
 

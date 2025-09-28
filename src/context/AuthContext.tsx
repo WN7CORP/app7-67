@@ -142,36 +142,45 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     let mounted = true;
 
-    // Since authentication is removed, load the first available profile
-    const loadProfile = async () => {
-      try {
-        const { data: profiles } = await (supabase as any)
-          .from('perfis')
-          .select('*')
-          .limit(1);
-
-        if (mounted && profiles && profiles.length > 0) {
-          const profileData = profiles[0];
-          setProfile({
-            id: profileData.id,
-            nome_completo: profileData.nome_completo,
-            email: profileData.email,
-            profile_type: profileData.profile_type
-          });
+    // Set up proper authentication state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted) return;
+        
+        console.log('Auth state changed:', event, session?.user?.id);
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Defer profile loading to avoid blocking auth state
+          setTimeout(() => {
+            if (mounted) fetchProfile(session.user.id);
+          }, 0);
+        } else {
+          setProfile(null);
         }
-      } catch (error) {
-        console.error('Erro ao carregar perfil:', error);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        
+        setLoading(false);
       }
-    };
+    );
 
-    loadProfile();
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      }
+      
+      setLoading(false);
+    });
 
     return () => {
       mounted = false;
+      subscription.unsubscribe();
     };
   }, []);
 

@@ -4918,6 +4918,36 @@ export type Database = {
         }
         Relationships: []
       }
+      security_events: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       senadores: {
         Row: {
           cpf: string | null
@@ -6521,6 +6551,13 @@ export type Database = {
       check_if_user_is_admin: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      check_table_rls_status: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          has_rls: boolean
+          table_name: string
+        }[]
       }
       check_user_subscription: {
         Args: { user_uuid: string }
