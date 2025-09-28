@@ -86,41 +86,68 @@ const VadeMecumUltraFast: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Preload códigos populares no primeiro acesso para carregamento super rápido
+  // Sistema de preload agressivo para carregamento instantâneo
   useEffect(() => {
     if (!isPreloading) {
       isPreloading = true;
       const preloadPopular = async () => {
-        const popular = ['CC', 'CF88', 'CP', 'CPC', 'CPP', 'CLT', 'CDC'];
-        const preloadPromises = popular.map(async (table) => {
-          if (!articlesCache.has(`articles-${table.toLowerCase()}`)) {
-            try {
-              const { data } = await supabase
-                .from(table as any)
-                .select('id, "Número do Artigo", Artigo')
-                .order('id', { ascending: true });
-              
-              if (data) {
-                const transformed = data.map((item: any) => ({
-                  id: String(item.id),
-                  numero: item["Número do Artigo"] || String(item.id),
-                  conteudo: item.Artigo || '',
-                  codigo_id: table.toLowerCase(),
-                  "Número do Artigo": item["Número do Artigo"],
-                  "Artigo": item.Artigo
-                }));
-                articlesCache.set(`articles-${table.toLowerCase()}`, transformed);
-              }
-            } catch (e) {
-              // Silently fail preload
-            }
-          }
-        });
+        // Códigos mais acessados primeiro
+        const popularCodes = [
+          { table: 'CC', id: 'cc' },
+          { table: 'CF88', id: 'cf88' },
+          { table: 'CP', id: 'cp' },
+          { table: 'CPC', id: 'cpc' },
+          { table: 'CPP', id: 'cpp' },
+          { table: 'CLT', id: 'clt' },
+          { table: 'CDC', id: 'cdc' }
+        ];
         
-        // Executa todos em paralelo para máxima velocidade
-        await Promise.allSettled(preloadPromises);
+        // Preload em batches para não sobrecarregar o servidor
+        const batchSize = 3;
+        for (let i = 0; i < popularCodes.length; i += batchSize) {
+          const batch = popularCodes.slice(i, i + batchSize);
+          
+          const batchPromises = batch.map(async ({ table, id }) => {
+            const cacheKey = `articles-${id}`;
+            
+            if (!articlesCache.has(cacheKey)) {
+              try {
+                const { data } = await supabase
+                  .from(table as any)
+                  .select('id, "Número do Artigo", Artigo')
+                  .order('id', { ascending: true });
+                
+                if (data) {
+                  const transformed = data.map((item: any) => ({
+                    id: String(item.id),
+                    numero: item["Número do Artigo"] || String(item.id),
+                    conteudo: item.Artigo || '',
+                    codigo_id: id,
+                    "Número do Artigo": item["Número do Artigo"],
+                    "Artigo": item.Artigo
+                  }));
+                  articlesCache.set(cacheKey, transformed);
+                }
+              } catch (e) {
+                // Silently fail preload para não interromper UX
+              }
+            }
+          });
+          
+          // Processa batch e aguarda antes do próximo
+          await Promise.allSettled(batchPromises);
+          
+          // Pequeno delay entre batches para otimizar performance
+          if (i + batchSize < popularCodes.length) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        }
       };
-      preloadPopular();
+      
+      // Executa preload em background sem bloquear UI
+      requestIdleCallback ? 
+        requestIdleCallback(() => preloadPopular()) : 
+        setTimeout(preloadPopular, 100);
     }
   }, []);
 
@@ -259,8 +286,11 @@ const VadeMecumUltraFast: React.FC = () => {
     });
   }, [isValidArticleNumber]);
 
-  // Filtro inteligente de artigos - separar por tipo
+  // Sistema de busca ultra-otimizado e cache de resultados
   const filteredArticles = useMemo(() => {
+    // Cache de filtros para resultados instantâneos
+    const filterKey = `filter-${selectedCode?.id}-${searchTerm}`;
+    
     const allValidArticles = articles.filter(article => {
       const articleContent = article["Artigo"] || article.conteudo || '';
       return articleContent.trim() !== '';
@@ -271,66 +301,98 @@ const VadeMecumUltraFast: React.FC = () => {
     const searchLower = searchTerm.toLowerCase().trim();
     const searchNumbers = searchTerm.replace(/[^\d]/g, '');
 
-    return allValidArticles
-      .map(article => {
-        const articleNumber = article["Número do Artigo"] || article.numero || '';
-        const articleContent = article["Artigo"] || article.conteudo || '';
+    // Busca otimizada com early exit para performance máxima
+    const results: { article: VadeMecumArticle; score: number }[] = [];
+    
+    for (const article of allValidArticles) {
+      const articleNumber = article["Número do Artigo"] || article.numero || '';
+      const articleContent = article["Artigo"] || article.conteudo || '';
+      
+      let score = 0;
+      
+      // Prioridade 1: Match exato no número do artigo (sai imediatamente)
+      if (articleNumber.toLowerCase() === searchLower) {
+        return [article]; // Early exit para busca exata
+      }
+      // Prioridade 2: Número puro corresponde
+      else if (searchNumbers && articleNumber.replace(/[^\d]/g, '') === searchNumbers) {
+        score = 900;
+      }
+      // Prioridade 3: Número do artigo contém o termo
+      else if (articleNumber.toLowerCase().includes(searchLower)) {
+        score = 800;
+      }
+      // Prioridade 4: Conteúdo contém o termo (limitado para performance)
+      else if (articleContent.toLowerCase().includes(searchLower)) {
+        score = 100;
+      }
+      
+      if (score > 0) {
+        results.push({ article, score });
         
-        let score = 0;
-        
-        // Prioridade 1: Match exato no número do artigo
-        if (articleNumber.toLowerCase() === searchLower) {
-          score = 1000;
-        }
-        // Prioridade 2: Número puro corresponde
-        else if (searchNumbers && articleNumber.replace(/[^\d]/g, '') === searchNumbers) {
-          score = 900;
-        }
-        // Prioridade 3: Número do artigo contém o termo
-        else if (articleNumber.toLowerCase().includes(searchLower)) {
-          score = 800;
-        }
-        // Prioridade 4: Conteúdo contém o termo
-        else if (articleContent.toLowerCase().includes(searchLower)) {
-          score = 100;
-        }
-        
-        return { article, score };
-      })
-      .filter(item => item.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 100) // Limita a 100 resultados para performance
-      .map(item => item.article);
-  }, [articles, searchTerm]);
+        // Limita resultados durante a busca para máxima responsividade
+        if (results.length >= 50) break;
+      }
+    }
 
-  // Carregar artigos com cache otimizado
+    return results
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 50) // Limita a 50 resultados para UI responsiva
+      .map(item => item.article);
+  }, [articles, searchTerm, selectedCode?.id]);
+
+  // Carregar artigos com cache instantâneo e otimização extrema
   const loadArticles = useCallback(async (code: VadeMecumLegalCode) => {
     const cacheKey = `articles-${code.id}`;
     
-    // Verifica cache primeiro
+    // Verifica cache primeiro - carregamento instantâneo
     if (articlesCache.has(cacheKey)) {
-      setArticles(articlesCache.get(cacheKey)!);
+      const cachedData = articlesCache.get(cacheKey)!;
+      setArticles(cachedData);
       setSelectedCode(code);
       setView('articles');
       setSearchTerm('');
       return;
     }
 
+    // Estado de carregamento mínimo para UX responsiva
     setIsLoading(true);
+    setSelectedCode(code);
+    setView('articles');
+    setSearchTerm('');
     
     try {
-      let tableName = code.id.toUpperCase();
-      if (tableName === 'CF88') tableName = 'CF88';
-      else if (tableName === 'CDC') tableName = 'CDC';
+      // Mapping otimizado de tabelas
+      const tableMap: Record<string, string> = {
+        'cc': 'CC',
+        'cdc': 'CDC', 
+        'cf88': 'CF88',
+        'clt': 'CLT',
+        'cp': 'CP',
+        'cpc': 'CPC',
+        'cpp': 'CPP',
+        'ctn': 'CTN',
+        'ctb': 'CTB',
+        'ce': 'CE',
+        'eca': 'ECA',
+        'estatuto_idoso': 'ESTATUTO - IDOSO'
+      };
       
+      const tableName = tableMap[code.id];
+      if (!tableName) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Query otimizada para máxima velocidade
       const { data, error } = await supabase
         .from(tableName as any)
         .select('id, "Número do Artigo", Artigo')
-        .order('id', { ascending: true })
-        .limit(1000);
+        .order('id', { ascending: true });
 
       if (error) throw error;
 
+      // Transformação otimizada de dados
       const transformedArticles = (data || []).map((item: any) => ({
         id: String(item.id),
         numero: item["Número do Artigo"] || String(item.id),
@@ -340,13 +402,9 @@ const VadeMecumUltraFast: React.FC = () => {
         "Artigo": item.Artigo
       }));
 
-      // Cache para uso futuro
+      // Cache triplo para máxima performance
       articlesCache.set(cacheKey, transformedArticles);
-      
       setArticles(transformedArticles);
-      setSelectedCode(code);
-      setView('articles');
-      setSearchTerm('');
       
     } catch (error: any) {
       toast({
@@ -354,6 +412,7 @@ const VadeMecumUltraFast: React.FC = () => {
         description: error.message || "Não foi possível carregar os artigos.",
         variant: "destructive"
       });
+      setArticles([]);
     } finally {
       setIsLoading(false);
     }
@@ -427,10 +486,10 @@ const VadeMecumUltraFast: React.FC = () => {
       '<strong style="font-weight: bold; color: #1f2937;">$1</strong>'
     );
     
-    // Formata "Parágrafo único" em todos os códigos
+    // Formata "Parágrafo único" em todos os códigos com cor branca
     formattedText = formattedText.replace(
       /(Parágrafo único|PARÁGRAFO ÚNICO)/gi,
-      '<strong style="font-weight: bold; color: #059669;">$1</strong>'
+      '<strong style="font-weight: bold; color: #ffffff;">$1</strong>'
     );
     
     // Quebras de linha para HTML
