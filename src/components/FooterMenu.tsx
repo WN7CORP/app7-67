@@ -1,4 +1,4 @@
-import { Scale, Bot, Film, Monitor, BookOpen } from 'lucide-react';
+import { Scale, Bot, Film, Monitor, BookOpen, Newspaper } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigation } from '@/context/NavigationContext';
 import { useAppFunctions } from '@/hooks/useAppFunctions';
@@ -27,7 +27,7 @@ export const FooterMenu = ({
   const menuItems = [{
     id: 'blog',
     title: 'JusBlog',
-    icon: Monitor,
+    icon: Newspaper,
     function: 'Blog Jurídico',
     color: 'primary'
   }, {
@@ -45,7 +45,7 @@ export const FooterMenu = ({
   }, {
     id: 'explorar',
     title: 'Explorar',
-    icon: BookOpen,
+    icon: Monitor,
     function: 'Explorar',
     color: 'library'
   }, {

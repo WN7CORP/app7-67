@@ -29,6 +29,7 @@ import { MapasMentais } from '@/components/MapasMentais';
 import { PlanoEstudo } from '@/components/PlanoEstudo/PlanoEstudo';
 import { Redacao } from '@/components/Redacao';
 import BloggerJuridico from '@/components/BloggerJuridico';
+import { IndicacoesLivros } from '@/components/IndicacoesLivros';
 
 export const AppFunction = () => {
   const { currentFunction, setCurrentFunction } = useNavigation();
@@ -145,6 +146,8 @@ export const AppFunction = () => {
       case 'Blogger Jurídico':
       case 'JusBlog':
         return <BloggerJuridico />;
+      case 'Indicações de Livros':
+        return <IndicacoesLivros />;
       default:
         return null;
     }
@@ -207,12 +210,22 @@ export const AppFunction = () => {
 
       <div className="pt-14 h-full flex items-center justify-center p-8">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4 gradient-text">
-            {currentFunction}
-          </h2>
-          <p className="text-lg text-muted-foreground mb-8">
-            {functionData?.descricao || 'Funcionalidade em desenvolvimento'}
-          </p>
+          <div className="mb-6">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-primary/20 to-primary/40 rounded-full flex items-center justify-center">
+              <div className="text-2xl">⚡</div>
+            </div>
+            <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              {currentFunction}
+            </h2>
+            <div className="mb-6">
+              <p className="text-lg font-semibold text-foreground mb-2">
+                Funcionalidade carregada instantaneamente!
+              </p>
+              <p className="text-primary font-medium">
+                Sem tempo de carregamento - experiência otimizada.
+              </p>
+            </div>
+          </div>
           {!functionData && (
             <p className="text-sm text-amber-400">
               Esta função será implementada em breve
