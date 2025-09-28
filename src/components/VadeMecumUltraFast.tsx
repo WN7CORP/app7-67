@@ -203,15 +203,27 @@ const VadeMecumUltraFast: React.FC = () => {
     const sectionWords = ['capítulo', 'capitulo', 'seção', 'secao', 'título', 'titulo', 'livro', 'parte'];
     if (sectionWords.some(word => lowerText.includes(word))) return false;
     
-    // Verifica se o conteúdo do artigo realmente começa com "Art." ou "Artigo"
+    // Verifica se o conteúdo do artigo contém referência a "Art." em qualquer lugar
     if (articleContent) {
       const contentLower = articleContent.toLowerCase().trim();
-      const startsWithArticle = contentLower.startsWith('art.') || 
-                               contentLower.startsWith('artigo') ||
-                               /^art\.?\s*\d+/.test(contentLower);
       
-      // Se não começa com "artigo" ou "art.", não deve mostrar número
-      if (!startsWithArticle) return false;
+      // Para o Código Penal e outros códigos, aceita se:
+      // 1. Começa diretamente com "art." ou "artigo"
+      // 2. Contém "art. X" onde X corresponde ao número do artigo
+      const startsWithArticle = contentLower.startsWith('art.') || 
+                               contentLower.startsWith('artigo');
+                               
+      // Ou se contém "Art. [número]" em qualquer lugar do texto
+      const articlePattern = new RegExp(`art\\.?\\s*${articleNumber.replace(/[^\w]/g, '')}[^\\w]`, 'i');
+      const containsArticleNumber = articlePattern.test(contentLower);
+      
+      // Aceita se começa com artigo OU se contém a referência ao artigo no meio do texto
+      if (startsWithArticle || containsArticleNumber) {
+        return true;
+      }
+      
+      // Se não encontrou padrão de artigo, não deve mostrar número
+      return false;
     }
     
     return true;
